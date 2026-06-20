@@ -17,7 +17,7 @@ export default function HomePage() {
   const [settings, setSettings] = useState({ feed_reminder_enabled: true, feed_reminder_hours: 4 })
   const [refreshKey, setRefreshKey] = useState(0)
   const [stopOpen, setStopOpen] = useState(false)
-  const [view, setView] = useState<'list' | 'chart'>('list')
+  const [view, setView] = useState<'list' | 'chart'>('chart')
 
   const refresh = useCallback(async () => {
     try {
@@ -46,19 +46,23 @@ export default function HomePage() {
       />
       <QuickAdd events={events} onChange={refresh} />
 
-      <div className="flex gap-2 px-4 pb-1">
-        <button
-          onClick={() => setView('list')}
-          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'list' ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''}`}
-        >
-          List
-        </button>
-        <button
-          onClick={() => setView('chart')}
-          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'chart' ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''}`}
-        >
-          Chart
-        </button>
+      <div className="px-4 pb-2">
+        <div className="flex w-full rounded-full bg-gray-100 dark:bg-neutral-800 p-1 text-sm">
+          {(['chart', 'list'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              aria-pressed={view === v}
+              className={`flex-1 rounded-full py-1.5 capitalize transition ${
+                view === v
+                  ? 'bg-white dark:bg-neutral-600 shadow-sm font-medium text-gray-900 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
       </div>
 
       {view === 'list' ? (
