@@ -14,6 +14,8 @@ describe('eventSummary', () => {
   it('bath', () => expect(eventSummary(e({ type: 'bath' }))).toBe('Bath'))
   it('breast feed', () => expect(eventSummary(e({ type: 'feed', feed_method: 'breast', breast_side: 'left' }))).toBe('Feed — left breast'))
   it('breast feed, unknown side', () => expect(eventSummary(e({ type: 'feed', feed_method: 'breast', breast_side: null }))).toBe('Feed — breast'))
+  it('breast feed with duration', () => expect(eventSummary(e({ type: 'feed', feed_method: 'breast', breast_side: 'left', occurred_at: '2026-06-20T10:00:00Z', feed_ended_at: '2026-06-20T10:25:00Z' }))).toBe('Feed — left breast (25 mins)'))
+  it('feed duration is singular at 1 min', () => expect(eventSummary(e({ type: 'feed', feed_method: 'breast', breast_side: 'right', occurred_at: '2026-06-20T10:00:00Z', feed_ended_at: '2026-06-20T10:01:00Z' }))).toBe('Feed — right breast (1 min)'))
   it('bottle feed with amount', () => expect(eventSummary(e({ type: 'feed', feed_method: 'bottle', bottle_amount_ml: 90 }))).toBe('Feed — bottle, 90ml'))
   it('weight stat', () => expect(eventSummary(e({ type: 'body_stat', stat_type: 'weight', stat_value: 4.2 }))).toBe('Weight — 4.2 kg'))
 })

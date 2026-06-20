@@ -1,8 +1,16 @@
 import type { BabyEvent, NappyContents } from './types'
+import { feedDurationMinutes } from './feed'
 
 function contentsLabel(c: NappyContents | null): string {
   const m = { wee: 'wee', poo: 'poo', both: 'wee & poo' } as const
   return m[c ?? 'wee']
+}
+
+// " (25 mins)" for a completed feed; "" while in progress or zero-length.
+function durationSuffix(e: BabyEvent): string {
+  const mins = feedDurationMinutes(e)
+  if (mins == null || mins <= 0) return ''
+  return ` (${mins} min${mins === 1 ? '' : 's'})`
 }
 
 export function eventSummary(e: BabyEvent): string {
@@ -13,11 +21,14 @@ export function eventSummary(e: BabyEvent): string {
       return `Potty — ${contentsLabel(e.nappy_contents)}`
     case 'bath':
       return 'Bath'
-    case 'feed':
+    case 'feed': {
+      const dur = durationSuffix(e)
       if (e.feed_method === 'breast') {
-        return e.breast_side ? `Feed — ${e.breast_side} breast` : 'Feed — breast'
+        return e.breast_side ? `Feed — ${e.breast_side} breast${dur}` : `Feed — breast${dur}`
       }
-      return e.bottle_amount_ml != null ? `Feed — bottle, ${e.bottle_amount_ml}ml` : 'Feed — bottle'
+      const amount = e.bottle_amount_ml != null ? `, ${e.bottle_amount_ml}ml` : ''
+      return `Feed — bottle${amount}${dur}`
+    }
     case 'body_stat': {
       const unit = e.stat_type === 'weight' ? 'kg' : 'cm'
       const label = e.stat_type === 'weight' ? 'Weight' : 'Height'
