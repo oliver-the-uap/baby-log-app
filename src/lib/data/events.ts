@@ -70,6 +70,18 @@ export async function allEventsForChart(): Promise<BabyEvent[]> {
   return data as BabyEvent[]
 }
 
+export async function lastWeightAt(): Promise<string | null> {
+  const { data, error } = await createClient()
+    .from('events')
+    .select('occurred_at')
+    .eq('type', 'body_stat')
+    .eq('stat_type', 'weight')
+    .order('occurred_at', { ascending: false })
+    .limit(1)
+  if (error) throw error
+  return data?.[0]?.occurred_at ?? null
+}
+
 export async function allBodyStats(): Promise<BabyEvent[]> {
   const { data, error } = await createClient()
     .from('events')

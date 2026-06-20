@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [sex, setSex] = useState<Sex | null>(null)
   const [enabled, setEnabled] = useState(true)
   const [hours, setHours] = useState(4)
+  const [weightOn, setWeightOn] = useState(true)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -24,14 +25,22 @@ export default function SettingsPage() {
       .then((b) => { setName(b.name); setDob(b.date_of_birth); setSex(b.gender) })
       .catch(notifyError)
     getSettings()
-      .then((s) => { setEnabled(s.feed_reminder_enabled); setHours(Number(s.feed_reminder_hours)) })
+      .then((s) => {
+        setEnabled(s.feed_reminder_enabled)
+        setHours(Number(s.feed_reminder_hours))
+        setWeightOn(s.weight_reminder_enabled)
+      })
       .catch(notifyError)
   }, [])
 
   async function save() {
     try {
       await updateBaby({ name, date_of_birth: dob, gender: sex })
-      await updateSettings({ feed_reminder_enabled: enabled, feed_reminder_hours: hours })
+      await updateSettings({
+        feed_reminder_enabled: enabled,
+        feed_reminder_hours: hours,
+        weight_reminder_enabled: weightOn,
+      })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (e) {
@@ -93,6 +102,17 @@ export default function SettingsPage() {
             onChange={(e) => setHours(parseFloat(e.target.value))}
           />
         </label>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-medium">Weight reminder</h2>
+        <label className="flex items-center justify-between">
+          <span>Weigh-in reminder</span>
+          <input type="checkbox" checked={weightOn} onChange={(e) => setWeightOn(e.target.checked)} />
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Reminds you to log a weight every 4 days until 12 weeks, then weekly for the rest of the first year.
+        </p>
       </section>
 
       <button onClick={save} className={`w-full rounded-lg p-3 ${PRIMARY}`}>
