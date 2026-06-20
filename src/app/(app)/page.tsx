@@ -49,13 +49,13 @@ export default function HomePage() {
       <div className="flex gap-2 px-4 pb-1">
         <button
           onClick={() => setView('list')}
-          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'list' ? 'bg-black text-white' : ''}`}
+          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'list' ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''}`}
         >
           List
         </button>
         <button
           onClick={() => setView('chart')}
-          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'chart' ? 'bg-black text-white' : ''}`}
+          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'chart' ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''}`}
         >
           Chart
         </button>

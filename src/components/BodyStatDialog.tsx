@@ -30,7 +30,7 @@ export function BodyStatDialog({ onClose, onDone }: { onClose: () => void; onDon
           <button
             key={t}
             onClick={() => setStatType(t)}
-            className={`flex-1 rounded-lg border p-2 capitalize ${statType === t ? 'bg-black text-white' : ''}`}
+            className={`flex-1 rounded-lg border p-2 capitalize ${statType === t ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''}`}
           >
             {t}
           </button>
@@ -43,7 +43,7 @@ export function BodyStatDialog({ onClose, onDone }: { onClose: () => void; onDon
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
-      <button onClick={save} className="w-full bg-black text-white rounded-lg p-3 mt-3">
+      <button onClick={save} className="w-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-lg p-3 mt-3">
         Save
       </button>
     </Sheet>

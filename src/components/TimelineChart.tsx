@@ -87,11 +87,15 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden flex">
-        <div className="shrink-0 w-14 bg-gray-50 border-r">
+      <div className="border border-gray-200 dark:border-neutral-700 rounded-lg overflow-hidden flex">
+        <div className="shrink-0 w-14 bg-gray-50 dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700">
           <div style={{ height: AXIS_H }} />
           {LANES.map((l) => (
-            <div key={l.type} style={{ height: LANE_H }} className="flex items-center px-2 text-xs border-t">
+            <div
+              key={l.type}
+              style={{ height: LANE_H }}
+              className="flex items-center px-2 text-xs border-t border-gray-200 dark:border-neutral-700"
+            >
               {l.label}
             </div>
           ))}
@@ -101,14 +105,14 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
             {LANES.map((l, i) => (
               <div
                 key={l.type}
-                className={i % 2 ? 'bg-gray-50' : 'bg-white'}
-                style={{ position: 'absolute', top: AXIS_H + i * LANE_H, left: 0, width, height: LANE_H, borderTop: '1px solid #eee' }}
+                className={i % 2 ? 'bg-gray-50 dark:bg-neutral-800/40' : 'bg-white dark:bg-neutral-900'}
+                style={{ position: 'absolute', top: AXIS_H + i * LANE_H, left: 0, width, height: LANE_H, borderTop: '1px solid rgba(120,120,120,0.22)' }}
               />
             ))}
             {dayTicks.map((t, i) => (
               <div key={i}>
-                <div style={{ position: 'absolute', left: t.x, top: 0, height: chartH, borderLeft: '1px solid #ddd' }} />
-                <div style={{ position: 'absolute', left: t.x + 4, top: 8, fontSize: 11 }} className="text-gray-500 whitespace-nowrap">
+                <div style={{ position: 'absolute', left: t.x, top: 0, height: chartH, borderLeft: '1px solid rgba(120,120,120,0.35)' }} />
+                <div style={{ position: 'absolute', left: t.x + 4, top: 8, fontSize: 11 }} className="text-gray-600 dark:text-gray-300 whitespace-nowrap">
                   {t.label}
                 </div>
               </div>
@@ -126,7 +130,7 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
           </div>
         </div>
       </div>
-      <p className="text-xs text-gray-400 mt-1">Scroll left for earlier · tap a block to edit · red line = now</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Scroll left for earlier · tap a block to edit · red line = now</p>
 
       {selected && (
         <EditEventDialog

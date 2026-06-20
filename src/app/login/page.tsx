@@ -47,7 +47,7 @@ export default function LoginPage() {
         />
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
-          className="w-full bg-black text-white rounded-lg p-3 disabled:opacity-50"
+          className="w-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-lg p-3 disabled:opacity-50"
           disabled={loading}
         >
           {loading ? 'Signing in…' : 'Sign in'}

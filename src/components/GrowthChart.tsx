@@ -23,7 +23,7 @@ export function GrowthChart({ events, dob }: { events: BabyEvent[]; dob: string 
           <button
             key={u}
             onClick={() => setUnit(u)}
-            className={`flex-1 rounded-lg border p-2 capitalize ${unit === u ? 'bg-black text-white' : ''}`}
+            className={`flex-1 rounded-lg border p-2 capitalize ${unit === u ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''}`}
           >
             {u}
           </button>

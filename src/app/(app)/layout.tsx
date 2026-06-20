@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-dvh pb-16">
       <RegisterSW />
       {children}
-      <nav className="fixed bottom-0 inset-x-0 border-t bg-white grid grid-cols-3 text-center text-sm">
+      <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 grid grid-cols-3 text-center text-sm">
         <Link className="py-3" href="/">Log</Link>
         <Link className="py-3" href="/growth">Growth</Link>
         <Link className="py-3" href="/settings">Settings</Link>

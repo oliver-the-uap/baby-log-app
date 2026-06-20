@@ -59,7 +59,7 @@ export function FeedFlow({
             onChange={(e) => setAmount(e.target.value)}
           />
         )}
-        <button onClick={stop} className="w-full bg-black text-white rounded-lg p-3">
+        <button onClick={stop} className="w-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-lg p-3">
           Stop feed
         </button>
       </Sheet>

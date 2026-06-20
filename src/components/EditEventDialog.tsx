@@ -52,7 +52,15 @@ export function EditEventDialog({
   }
 
   return (
-    <Sheet title="Edit event" onClose={onClose}>
+    <Sheet
+      title="Edit event"
+      onClose={onClose}
+      headerRight={
+        <button onClick={remove} className="text-red-600 dark:text-red-400 text-sm">
+          Delete
+        </button>
+      }
+    >
       <label className="block text-sm mb-1">{isFeed ? 'Start' : 'Time'}</label>
       <input
         type="datetime-local"
@@ -90,11 +98,14 @@ export function EditEventDialog({
       )}
 
       <div className="flex gap-3 mt-4">
-        <button onClick={save} className="flex-1 bg-black text-white rounded-lg p-3">
-          Save
+        <button onClick={onClose} className="flex-1 border rounded-lg p-3">
+          Cancel
         </button>
-        <button onClick={remove} className="flex-1 border border-red-500 text-red-600 rounded-lg p-3">
-          Delete
+        <button
+          onClick={save}
+          className="flex-1 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-lg p-3"
+        >
+          Save
         </button>
       </div>
     </Sheet>

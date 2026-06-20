@@ -57,7 +57,7 @@ export default function SettingsPage() {
         />
       </label>
 
-      <button onClick={save} className="w-full bg-black text-white rounded-lg p-3">
+      <button onClick={save} className="w-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-lg p-3">
         {saved ? 'Saved ✓' : 'Save'}
       </button>
 
