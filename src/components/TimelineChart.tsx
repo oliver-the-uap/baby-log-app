@@ -6,12 +6,19 @@ import { eventSummary } from '@/lib/domain/format'
 import type { BabyEvent, EventType } from '@/lib/domain/types'
 import { EditEventDialog } from './EditEventDialog'
 
-const LANES: { type: EventType; label: string }[] = [
+// One row per lane; nappy + potty share a lane (distinguished by colour).
+const LANES: { label: string; types: EventType[] }[] = [
+  { label: 'Feed', types: ['feed'] },
+  { label: 'Nappy/Potty', types: ['nappy', 'potty'] },
+  { label: 'Bath', types: ['bath'] },
+]
+const LEGEND: { type: EventType; label: string }[] = [
   { type: 'feed', label: 'Feed' },
   { type: 'nappy', label: 'Nappy' },
   { type: 'potty', label: 'Potty' },
   { type: 'bath', label: 'Bath' },
 ]
+const laneIndexOf = (t: EventType) => LANES.findIndex((l) => l.types.includes(t))
 const LANE_H = 30
 const AXIS_H = 34
 const ZOOMS = [40, 80, 150] // px per hour
@@ -37,14 +44,14 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
   const pxPerMin = ZOOMS[zoom] / 60
 
   const { width, blocks, dayTicks } = useMemo(() => {
-    const laneTypes = LANES.map((l) => l.type)
+    const laneTypes = LANES.flatMap((l) => l.types)
     const evs = events.filter((e) => laneTypes.includes(e.type))
     const minTime = evs.length ? new Date(evs[0].occurred_at).getTime() : nowTs - 24 * 3600e3
     const maxTime = nowTs
     const xOf = (t: number) => ((t - minTime) / 60000) * pxPerMin
     const width = Math.max(320, xOf(maxTime))
     const blocks = evs.map((e) => {
-      const lane = laneTypes.indexOf(e.type)
+      const lane = laneIndexOf(e.type)
       const start = new Date(e.occurred_at).getTime()
       let w = 9
       if (e.type === 'feed') {
@@ -74,7 +81,7 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
     <div className="px-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-          {LANES.map((l) => (
+          {LEGEND.map((l) => (
             <span key={l.type} className="flex items-center gap-1">
               <span className={`inline-block w-3 h-3 rounded-sm ${colorFor({ type: l.type } as BabyEvent)}`} />
               {l.label}
@@ -88,13 +95,13 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
       </div>
 
       <div className="border border-gray-200 dark:border-neutral-700 rounded-lg overflow-hidden flex">
-        <div className="shrink-0 w-14 bg-gray-50 dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700">
+        <div className="shrink-0 w-16 bg-gray-50 dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700">
           <div style={{ height: AXIS_H }} />
           {LANES.map((l) => (
             <div
-              key={l.type}
+              key={l.label}
               style={{ height: LANE_H }}
-              className="flex items-center px-2 text-xs border-t border-gray-200 dark:border-neutral-700"
+              className="flex items-center px-2 text-xs border-t border-gray-200 dark:border-neutral-700 leading-tight"
             >
               {l.label}
             </div>
@@ -104,7 +111,7 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
           <div className="relative" style={{ width, height: chartH }}>
             {LANES.map((l, i) => (
               <div
-                key={l.type}
+                key={l.label}
                 className={i % 2 ? 'bg-gray-50 dark:bg-neutral-800/40' : 'bg-white dark:bg-neutral-900'}
                 style={{ position: 'absolute', top: AXIS_H + i * LANE_H, left: 0, width, height: LANE_H, borderTop: '1px solid rgba(120,120,120,0.22)' }}
               />
