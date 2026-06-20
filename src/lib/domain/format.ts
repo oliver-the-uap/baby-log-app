@@ -31,7 +31,8 @@ export function eventSummary(e: BabyEvent): string {
     }
     case 'body_stat': {
       const unit = e.stat_type === 'weight' ? 'kg' : 'cm'
-      const label = e.stat_type === 'weight' ? 'Weight' : 'Height'
+      const label =
+        e.stat_type === 'weight' ? 'Weight' : e.stat_type === 'head' ? 'Head circ' : 'Height'
       return `${label} — ${e.stat_value} ${unit}`
     }
   }

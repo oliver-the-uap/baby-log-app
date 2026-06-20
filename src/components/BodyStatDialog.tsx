@@ -26,7 +26,7 @@ export function BodyStatDialog({ onClose, onDone }: { onClose: () => void; onDon
   return (
     <Sheet title="Body stat" onClose={onClose}>
       <div className="flex gap-2 mb-3">
-        {(['weight', 'height'] as const).map((t) => (
+        {(['weight', 'height', 'head'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setStatType(t)}

@@ -109,6 +109,7 @@ export function GrowthChart({ events, dob, sex }: { events: BabyEvent[]; dob: st
 
       <MeasureChart title="Weight (kg)" unit={unit} color="#0d9488" data={build('weight')} hasRef={!!sex} />
       <MeasureChart title="Height (cm)" unit={unit} color="#4f46e5" data={build('height')} hasRef={!!sex} />
+      <MeasureChart title="Head circ (cm)" unit={unit} color="#db2777" data={build('head')} hasRef={!!sex} />
 
       {sex && (
         <p className="text-xs text-gray-400 dark:text-gray-500">

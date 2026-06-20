@@ -3,7 +3,7 @@
 // birth–24 months). Each row is [P3, P50, P97] by month of age (index 0..24).
 // Weight in kg, length/height in cm.
 export type Sex = 'boy' | 'girl'
-export type Measure = 'weight' | 'height'
+export type Measure = 'weight' | 'height' | 'head'
 type Row = [number, number, number]
 
 const WEIGHT_BOY: Row[] = [
@@ -43,6 +43,25 @@ const HEIGHT_GIRL: Row[] = [
   [79.96, 86.42, 92.87],
 ]
 
+const HEAD_BOY: Row[] = [
+  [31.92, 34.46, 37.0], [34.94, 37.28, 39.61], [36.78, 39.13, 41.47], [38.15, 40.51, 42.88],
+  [39.24, 41.63, 44.02], [40.14, 42.56, 44.97], [40.89, 43.33, 45.77], [41.51, 43.98, 46.45],
+  [42.04, 44.53, 47.02], [42.49, 45.0, 47.51], [42.87, 45.41, 47.94], [43.2, 45.76, 48.31],
+  [43.5, 46.07, 48.64], [43.75, 46.34, 48.92], [43.98, 46.58, 49.18], [44.19, 46.81, 49.42],
+  [44.38, 47.01, 49.64], [44.56, 47.2, 49.84], [44.72, 47.37, 50.02], [44.87, 47.54, 50.2],
+  [45.02, 47.69, 50.37], [45.15, 47.84, 50.53], [45.28, 47.98, 50.68], [45.41, 48.12, 50.83],
+  [45.53, 48.25, 50.97],
+]
+const HEAD_GIRL: Row[] = [
+  [31.51, 33.88, 36.25], [34.2, 36.55, 38.89], [35.83, 38.25, 40.68], [37.05, 39.53, 42.02],
+  [38.05, 40.58, 43.11], [38.89, 41.46, 44.03], [39.59, 42.2, 44.8], [40.2, 42.83, 45.46],
+  [40.71, 43.37, 46.02], [41.15, 43.83, 46.51], [41.54, 44.23, 46.92], [41.88, 44.58, 47.29],
+  [42.18, 44.9, 47.61], [42.45, 45.18, 47.9], [42.69, 45.43, 48.16], [42.91, 45.66, 48.4],
+  [43.11, 45.87, 48.62], [43.3, 46.06, 48.82], [43.48, 46.24, 49.0], [43.65, 46.42, 49.18],
+  [43.81, 46.58, 49.35], [43.96, 46.74, 49.52], [44.11, 46.89, 49.67], [44.25, 47.04, 49.83],
+  [44.39, 47.18, 49.97],
+]
+
 export interface CentilePoint {
   month: number
   p3: number
@@ -50,9 +69,12 @@ export interface CentilePoint {
   p97: number
 }
 
+const TABLES: Record<Measure, Record<Sex, Row[]>> = {
+  weight: { boy: WEIGHT_BOY, girl: WEIGHT_GIRL },
+  height: { boy: HEIGHT_BOY, girl: HEIGHT_GIRL },
+  head: { boy: HEAD_BOY, girl: HEAD_GIRL },
+}
+
 export function centiles(sex: Sex, measure: Measure): CentilePoint[] {
-  const table = measure === 'weight'
-    ? sex === 'boy' ? WEIGHT_BOY : WEIGHT_GIRL
-    : sex === 'boy' ? HEIGHT_BOY : HEIGHT_GIRL
-  return table.map((r, month) => ({ month, p3: r[0], p50: r[1], p97: r[2] }))
+  return TABLES[measure][sex].map((r, month) => ({ month, p3: r[0], p50: r[1], p97: r[2] }))
 }
