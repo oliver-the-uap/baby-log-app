@@ -38,7 +38,7 @@ export function FeedFlow({
   }
   async function stop() {
     const patch: Partial<BabyEvent> = { feed_ended_at: new Date().toISOString() }
-    if (active!.feed_method === 'bottle' && amount) patch.bottle_amount_ml = parseInt(amount, 10)
+    if (active!.feed_method === 'bottle' && amount) patch.bottle_amount_ml = parseFloat(amount)
     try {
       await updateEvent(active!.id, patch)
       onDone()
@@ -53,7 +53,7 @@ export function FeedFlow({
         {active.feed_method === 'bottle' && (
           <input
             className="w-full border rounded-lg p-3 mb-3"
-            inputMode="numeric"
+            inputMode="decimal"
             placeholder="ml drunk (optional)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}

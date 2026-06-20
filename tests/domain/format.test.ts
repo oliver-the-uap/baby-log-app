@@ -10,8 +10,10 @@ const e = (p: Partial<BabyEvent>): BabyEvent => ({
 
 describe('eventSummary', () => {
   it('nappy', () => expect(eventSummary(e({ type: 'nappy', nappy_contents: 'both' }))).toBe('Nappy — wee & poo'))
+  it('potty', () => expect(eventSummary(e({ type: 'potty', nappy_contents: 'poo' }))).toBe('Potty — poo'))
   it('bath', () => expect(eventSummary(e({ type: 'bath' }))).toBe('Bath'))
   it('breast feed', () => expect(eventSummary(e({ type: 'feed', feed_method: 'breast', breast_side: 'left' }))).toBe('Feed — left breast'))
+  it('breast feed, unknown side', () => expect(eventSummary(e({ type: 'feed', feed_method: 'breast', breast_side: null }))).toBe('Feed — breast'))
   it('bottle feed with amount', () => expect(eventSummary(e({ type: 'feed', feed_method: 'bottle', bottle_amount_ml: 90 }))).toBe('Feed — bottle, 90ml'))
   it('weight stat', () => expect(eventSummary(e({ type: 'body_stat', stat_type: 'weight', stat_value: 4.2 }))).toBe('Weight — 4.2 kg'))
 })

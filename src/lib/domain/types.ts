@@ -1,4 +1,4 @@
-export type EventType = 'nappy' | 'bath' | 'feed' | 'body_stat'
+export type EventType = 'nappy' | 'potty' | 'bath' | 'feed' | 'body_stat'
 export type NappyContents = 'wee' | 'poo' | 'both'
 export type FeedMethod = 'breast' | 'bottle'
 export type BreastSide = 'left' | 'right' | 'both'

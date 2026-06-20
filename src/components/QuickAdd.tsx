@@ -2,13 +2,13 @@
 import { useState } from 'react'
 import { createEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
-import { NappyDialog } from './NappyDialog'
+import { EliminationDialog } from './EliminationDialog'
 import { BodyStatDialog } from './BodyStatDialog'
 import { FeedFlow } from './FeedFlow'
 import type { BabyEvent } from '@/lib/domain/types'
 
 export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: () => void }) {
-  const [open, setOpen] = useState<null | 'nappy' | 'feed' | 'stat'>(null)
+  const [open, setOpen] = useState<null | 'elim' | 'feed' | 'stat'>(null)
 
   async function bath() {
     try {
@@ -22,8 +22,8 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
   return (
     <>
       <div className="grid grid-cols-2 gap-3 p-4">
-        <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('nappy')}>
-          Nappy
+        <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('elim')}>
+          Nappy / Potty
         </button>
         <button className="rounded-xl border p-5 text-lg" onClick={bath}>
           Bath
@@ -35,8 +35,8 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
           Body stat
         </button>
       </div>
-      {open === 'nappy' && (
-        <NappyDialog onClose={() => setOpen(null)} onDone={() => { setOpen(null); onChange() }} />
+      {open === 'elim' && (
+        <EliminationDialog onClose={() => setOpen(null)} onDone={() => { setOpen(null); onChange() }} />
       )}
       {open === 'stat' && (
         <BodyStatDialog onClose={() => setOpen(null)} onDone={() => { setOpen(null); onChange() }} />
