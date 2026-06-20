@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { pageEvents } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import type { BabyEvent } from '@/lib/domain/types'
@@ -47,9 +47,22 @@ export function Timeline({
 
   return (
     <div>
-      {items.map((e) => (
-        <EventRow key={e.id} event={e} onEdit={() => setEditing(e)} />
-      ))}
+      {items.map((e, i) => {
+        const fmt = (iso: string) =>
+          new Date(iso).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+        const day = fmt(e.occurred_at)
+        const newDay = i === 0 || day !== fmt(items[i - 1].occurred_at)
+        return (
+          <Fragment key={e.id}>
+            {newDay && (
+              <div className="px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-neutral-800 border-t border-b border-gray-200 dark:border-neutral-700">
+                {day}
+              </div>
+            )}
+            <EventRow event={e} onEdit={() => setEditing(e)} />
+          </Fragment>
+        )
+      })}
       {!done && <div ref={sentinel} className="h-10" />}
       {editing && (
         <EditEventDialog

@@ -4,6 +4,7 @@ import { recentForState, lastFeedStart } from '@/lib/data/events'
 import { getSettings } from '@/lib/data/settings'
 import { notifyError } from '@/lib/notify'
 import { QuickAdd } from '@/components/QuickAdd'
+import { TodayStats } from '@/components/TodayStats'
 import { Timeline } from '@/components/Timeline'
 import { TimelineChart } from '@/components/TimelineChart'
 import { ActiveFeedBanner } from '@/components/ActiveFeedBanner'
@@ -45,6 +46,8 @@ export default function HomePage() {
         hours={settings.feed_reminder_hours}
       />
       <QuickAdd events={events} onChange={refresh} />
+
+      <TodayStats events={events} />
 
       <div className="px-4 pb-2">
         <div className="flex w-full rounded-full bg-gray-100 dark:bg-neutral-800 p-1 text-sm">

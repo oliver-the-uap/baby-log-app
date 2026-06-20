@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { activeFeed, lastBreastSide, feedDurationMinutes } from '@/lib/domain/feed'
+import { activeFeed, lastBreastSide, feedDurationMinutes, feedingTodayMinutes } from '@/lib/domain/feed'
 import type { BabyEvent } from '@/lib/domain/types'
 
 const base: BabyEvent = {
@@ -22,5 +22,18 @@ describe('feed helpers', () => {
   })
   it('computes duration in minutes', () => {
     expect(feedDurationMinutes({ ...base, feed_ended_at: '2026-06-20T10:25:00Z' })).toBe(25)
+  })
+
+  it('computes share of today spent feeding', () => {
+    const now = new Date('2026-06-20T12:00:00') // local midday => 720 min elapsed
+    const evs: BabyEvent[] = [
+      { ...base, id: 'x', occurred_at: '2026-06-20T10:00:00', feed_ended_at: '2026-06-20T11:00:00' }, // 60m
+      { ...base, id: 'y', occurred_at: '2026-06-20T11:30:00', feed_ended_at: '2026-06-20T11:50:00' }, // 20m
+      { ...base, id: 'z', type: 'nappy', feed_method: null, occurred_at: '2026-06-20T09:00:00', feed_ended_at: null },
+    ]
+    const r = feedingTodayMinutes(evs, now)
+    expect(r.feedMinutes).toBe(80)
+    expect(r.feeds).toBe(2)
+    expect(r.percent).toBe(11) // 80/720
   })
 })
