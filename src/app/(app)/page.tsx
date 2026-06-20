@@ -5,6 +5,7 @@ import { getSettings } from '@/lib/data/settings'
 import { notifyError } from '@/lib/notify'
 import { QuickAdd } from '@/components/QuickAdd'
 import { Timeline } from '@/components/Timeline'
+import { TimelineChart } from '@/components/TimelineChart'
 import { ActiveFeedBanner } from '@/components/ActiveFeedBanner'
 import { OverdueFeedBanner } from '@/components/OverdueFeedBanner'
 import { FeedFlow } from '@/components/FeedFlow'
@@ -16,6 +17,7 @@ export default function HomePage() {
   const [settings, setSettings] = useState({ feed_reminder_enabled: true, feed_reminder_hours: 4 })
   const [refreshKey, setRefreshKey] = useState(0)
   const [stopOpen, setStopOpen] = useState(false)
+  const [view, setView] = useState<'list' | 'chart'>('list')
 
   const refresh = useCallback(async () => {
     try {
@@ -43,7 +45,27 @@ export default function HomePage() {
         hours={settings.feed_reminder_hours}
       />
       <QuickAdd events={events} onChange={refresh} />
-      <Timeline refreshKey={refreshKey} onChange={refresh} />
+
+      <div className="flex gap-2 px-4 pb-1">
+        <button
+          onClick={() => setView('list')}
+          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'list' ? 'bg-black text-white' : ''}`}
+        >
+          List
+        </button>
+        <button
+          onClick={() => setView('chart')}
+          className={`flex-1 rounded-lg border p-2 text-sm ${view === 'chart' ? 'bg-black text-white' : ''}`}
+        >
+          Chart
+        </button>
+      </div>
+
+      {view === 'list' ? (
+        <Timeline refreshKey={refreshKey} onChange={refresh} />
+      ) : (
+        <TimelineChart refreshKey={refreshKey} onChange={refresh} />
+      )}
       {stopOpen && (
         <FeedFlow
           events={events}

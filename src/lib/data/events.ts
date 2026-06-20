@@ -59,6 +59,17 @@ export async function lastFeedStart(): Promise<string | null> {
   return data?.[0]?.occurred_at ?? null
 }
 
+// All events oldest-first, for the horizontal timeline chart.
+export async function allEventsForChart(): Promise<BabyEvent[]> {
+  const { data, error } = await createClient()
+    .from('events')
+    .select('*')
+    .order('occurred_at', { ascending: true })
+    .limit(1000)
+  if (error) throw error
+  return data as BabyEvent[]
+}
+
 export async function allBodyStats(): Promise<BabyEvent[]> {
   const { data, error } = await createClient()
     .from('events')
