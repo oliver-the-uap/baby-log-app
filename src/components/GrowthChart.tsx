@@ -17,6 +17,18 @@ const ageInUnit = (occ: string, dob: string, unit: AgeUnit) => {
 
 type Row = { age: number; value?: number; [k: string]: number | undefined }
 
+// Render a small centile number at the line's rightmost point (printed-chart style).
+// Typed as `any` because Recharts' label content signature is awkward to satisfy.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rightLabel(text: string, lastIndex: number, emphasized: boolean): any {
+  return (p: { x?: number; y?: number; index?: number }) =>
+    p.index === lastIndex && p.x != null && p.y != null ? (
+      <text x={p.x + 4} y={p.y} dy={3} fontSize={9} fill={emphasized ? '#475569' : '#94a3b8'}>
+        {text}
+      </text>
+    ) : null
+}
+
 function MeasureChart({
   title,
   unit,
@@ -34,7 +46,7 @@ function MeasureChart({
     <div className="mb-6">
       <h2 className="text-sm font-medium mb-1">{title}</h2>
       <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={data} margin={{ top: 8, right: 14, bottom: 16, left: 0 }}>
+        <LineChart data={data} margin={{ top: 8, right: 30, bottom: 16, left: 0 }}>
           <XAxis
             dataKey="age"
             type="number"
@@ -59,6 +71,7 @@ function MeasureChart({
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
+                label={rightLabel(c.label.replace(/\D/g, ''), data.length - 1, i === MEDIAN_INDEX)}
               />
             ))}
           <Line dataKey="value" name={title} stroke={color} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
