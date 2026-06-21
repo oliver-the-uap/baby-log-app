@@ -1,13 +1,15 @@
 'use client'
 import { useState } from 'react'
-import { createEvent } from '@/lib/data/events'
+import { createEvent, deleteEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import type { StatType } from '@/lib/domain/types'
 import { Sheet } from './Sheet'
+import { useToast } from './ToastProvider'
 
 export function BodyStatDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [statType, setStatType] = useState<StatType>('weight')
   const [value, setValue] = useState('')
+  const showToast = useToast()
 
   async function save() {
     const v = parseFloat(value)
@@ -16,7 +18,16 @@ export function BodyStatDialog({ onClose, onDone }: { onClose: () => void; onDon
       return
     }
     try {
-      await createEvent({ type: 'body_stat', stat_type: statType, stat_value: v })
+      const ev = await createEvent({ type: 'body_stat', stat_type: statType, stat_value: v })
+      const label = statType === 'head' ? 'Head circ' : statType[0].toUpperCase() + statType.slice(1)
+      showToast(`${label} logged`, async () => {
+        try {
+          await deleteEvent(ev.id)
+          onDone()
+        } catch (e) {
+          notifyError(e)
+        }
+      })
       onDone()
     } catch (e) {
       notifyError(e)

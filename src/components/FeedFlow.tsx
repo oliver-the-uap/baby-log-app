@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
-import { createEvent, updateEvent } from '@/lib/data/events'
+import { createEvent, updateEvent, deleteEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import { activeFeed, lastBreastSide } from '@/lib/domain/feed'
 import type { BabyEvent, BreastSide } from '@/lib/domain/types'
 import { Sheet } from './Sheet'
+import { useToast } from './ToastProvider'
 
 export function FeedFlow({
   events,
@@ -19,10 +20,23 @@ export function FeedFlow({
   const last = lastBreastSide(events)
   const [method, setMethod] = useState<'breast' | 'bottle' | null>(null)
   const [amount, setAmount] = useState('')
+  const showToast = useToast()
+
+  function undoCreate(id: string) {
+    return async () => {
+      try {
+        await deleteEvent(id)
+        onDone()
+      } catch (e) {
+        notifyError(e)
+      }
+    }
+  }
 
   async function startBreast(side: BreastSide) {
     try {
-      await createEvent({ type: 'feed', feed_method: 'breast', breast_side: side })
+      const ev = await createEvent({ type: 'feed', feed_method: 'breast', breast_side: side })
+      showToast('Feed started', undoCreate(ev.id))
       onDone()
     } catch (e) {
       notifyError(e)
@@ -30,17 +44,27 @@ export function FeedFlow({
   }
   async function startBottle() {
     try {
-      await createEvent({ type: 'feed', feed_method: 'bottle' })
+      const ev = await createEvent({ type: 'feed', feed_method: 'bottle' })
+      showToast('Feed started', undoCreate(ev.id))
       onDone()
     } catch (e) {
       notifyError(e)
     }
   }
   async function stop() {
+    const id = active!.id
     const patch: Partial<BabyEvent> = { feed_ended_at: new Date().toISOString() }
     if (active!.feed_method === 'bottle' && amount) patch.bottle_amount_ml = parseFloat(amount)
     try {
-      await updateEvent(active!.id, patch)
+      await updateEvent(id, patch)
+      showToast('Feed stopped', async () => {
+        try {
+          await updateEvent(id, { feed_ended_at: null, bottle_amount_ml: null })
+          onDone()
+        } catch (e) {
+          notifyError(e)
+        }
+      })
       onDone()
     } catch (e) {
       notifyError(e)

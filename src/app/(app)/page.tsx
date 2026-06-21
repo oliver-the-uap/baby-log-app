@@ -5,6 +5,7 @@ import { getSettings } from '@/lib/data/settings'
 import { getBaby } from '@/lib/data/baby'
 import { activeSleep } from '@/lib/domain/sleep'
 import { notifyError } from '@/lib/notify'
+import { useToast } from '@/components/ToastProvider'
 import { QuickAdd } from '@/components/QuickAdd'
 import { TodayStats } from '@/components/TodayStats'
 import { SinceLast } from '@/components/SinceLast'
@@ -33,6 +34,7 @@ export default function HomePage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [stopOpen, setStopOpen] = useState(false)
   const [view, setView] = useState<'list' | 'chart'>('chart')
+  const showToast = useToast()
 
   const refresh = useCallback(async () => {
     try {
@@ -68,8 +70,17 @@ export default function HomePage() {
   async function wake() {
     const active = activeSleep(events)
     if (!active) return
+    const id = active.id
     try {
-      await updateEvent(active.id, { sleep_ended_at: new Date().toISOString() })
+      await updateEvent(id, { sleep_ended_at: new Date().toISOString() })
+      showToast('Woke up', async () => {
+        try {
+          await updateEvent(id, { sleep_ended_at: null })
+          refresh()
+        } catch (e) {
+          notifyError(e)
+        }
+      })
       refresh()
     } catch (e) {
       notifyError(e)

@@ -1,18 +1,28 @@
 'use client'
 import { useState } from 'react'
-import { createEvent } from '@/lib/data/events'
+import { createEvent, deleteEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import type { NappyContents } from '@/lib/domain/types'
 import { Sheet } from './Sheet'
 import { PottyCueButton } from './PottyCueButton'
+import { useToast } from './ToastProvider'
 
 // Nappy / Potty → choose location → choose wee / poo / both.
 export function EliminationDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [place, setPlace] = useState<'nappy' | 'potty' | null>(null)
+  const showToast = useToast()
 
   async function log(contents: NappyContents) {
     try {
-      await createEvent({ type: place!, nappy_contents: contents })
+      const ev = await createEvent({ type: place!, nappy_contents: contents })
+      showToast(`${place === 'potty' ? 'Potty' : 'Nappy'} logged`, async () => {
+        try {
+          await deleteEvent(ev.id)
+          onDone()
+        } catch (e) {
+          notifyError(e)
+        }
+      })
       onDone()
     } catch (e) {
       notifyError(e)

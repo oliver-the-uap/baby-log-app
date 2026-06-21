@@ -1,13 +1,23 @@
 'use client'
-import { createEvent } from '@/lib/data/events'
+import { createEvent, deleteEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import type { WashKind } from '@/lib/domain/types'
 import { Sheet } from './Sheet'
+import { useToast } from './ToastProvider'
 
 export function WashDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const showToast = useToast()
   async function log(kind: WashKind) {
     try {
-      await createEvent({ type: 'bath', wash_kind: kind })
+      const ev = await createEvent({ type: 'bath', wash_kind: kind })
+      showToast(`${kind === 'shower' ? 'Shower' : 'Bath'} logged`, async () => {
+        try {
+          await deleteEvent(ev.id)
+          onDone()
+        } catch (e) {
+          notifyError(e)
+        }
+      })
       onDone()
     } catch (e) {
       notifyError(e)

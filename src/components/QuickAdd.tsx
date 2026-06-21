@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { createEvent, updateEvent } from '@/lib/data/events'
+import { createEvent, updateEvent, deleteEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import { activeSleep } from '@/lib/domain/sleep'
+import { useToast } from './ToastProvider'
 import { EliminationDialog } from './EliminationDialog'
 import { WashDialog } from './WashDialog'
 import { BodyStatDialog } from './BodyStatDialog'
@@ -12,11 +13,32 @@ import type { BabyEvent } from '@/lib/domain/types'
 export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: () => void }) {
   const [open, setOpen] = useState<null | 'elim' | 'wash' | 'feed' | 'stat'>(null)
   const sleeping = activeSleep(events)
+  const showToast = useToast()
 
   async function toggleSleep() {
     try {
-      if (sleeping) await updateEvent(sleeping.id, { sleep_ended_at: new Date().toISOString() })
-      else await createEvent({ type: 'sleep' })
+      if (sleeping) {
+        const id = sleeping.id
+        await updateEvent(id, { sleep_ended_at: new Date().toISOString() })
+        showToast('Woke up', async () => {
+          try {
+            await updateEvent(id, { sleep_ended_at: null })
+            onChange()
+          } catch (e) {
+            notifyError(e)
+          }
+        })
+      } else {
+        const ev = await createEvent({ type: 'sleep' })
+        showToast('Sleep started', async () => {
+          try {
+            await deleteEvent(ev.id)
+            onChange()
+          } catch (e) {
+            notifyError(e)
+          }
+        })
+      }
       onChange()
     } catch (e) {
       notifyError(e)
