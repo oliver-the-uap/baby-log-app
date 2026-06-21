@@ -21,6 +21,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0f766e",
+  // Resize the layout when the on-screen keyboard opens, so bottom-anchored
+  // sheets (and their Save buttons) float above it instead of being covered.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

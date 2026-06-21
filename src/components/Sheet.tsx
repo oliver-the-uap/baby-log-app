@@ -14,7 +14,7 @@ export function Sheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end" role="dialog" aria-modal="true">
       <button aria-label="Close" className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full bg-white dark:bg-neutral-900 rounded-t-2xl p-5 pb-8">
+      <div className="relative w-full bg-white dark:bg-neutral-900 rounded-t-2xl p-5 pb-8 max-h-[90dvh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">{title}</h2>
           {headerRight ?? (
