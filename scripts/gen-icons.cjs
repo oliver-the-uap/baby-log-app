@@ -40,19 +40,20 @@ function encodePng(size, rgb) {
 }
 
 // --- artwork, in normalised [0,1] coordinates ---
-const TOP = [45, 212, 191] // teal-400
+const TOP = [20, 184, 166] // teal-500 (saturated, reads clearly at small size)
 const BOT = [13, 118, 110] // teal-700
 const ellipse = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1
+// Footprint kept within the central ~55% (maskable safe zone), centred on the icon.
 const TOES = [
-  [0.355, 0.435, 0.05],
-  [0.45, 0.395, 0.046],
-  [0.545, 0.38, 0.042],
-  [0.635, 0.405, 0.036],
-  [0.71, 0.45, 0.03],
+  [0.36, 0.4, 0.048],
+  [0.45, 0.36, 0.044],
+  [0.545, 0.35, 0.04],
+  [0.635, 0.375, 0.034],
+  [0.705, 0.42, 0.028],
 ]
 function shade(x, y) {
   const onFoot =
-    ellipse(x, y, 0.5, 0.63, 0.135, 0.185) || TOES.some(([cx, cy, r]) => ellipse(x, y, cx, cy, r, r))
+    ellipse(x, y, 0.5, 0.58, 0.125, 0.165) || TOES.some(([cx, cy, r]) => ellipse(x, y, cx, cy, r, r))
   if (onFoot) return [255, 255, 255]
   return [0, 1, 2].map((i) => Math.round(TOP[i] + (BOT[i] - TOP[i]) * y))
 }
