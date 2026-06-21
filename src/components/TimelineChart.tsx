@@ -11,14 +11,14 @@ const LANES: { label: string; types: EventType[] }[] = [
   { label: 'Feed', types: ['feed'] },
   { label: 'Sleep', types: ['sleep'] },
   { label: 'Nappy/Potty', types: ['nappy', 'potty'] },
-  { label: 'Bath', types: ['bath'] },
+  { label: 'Wash', types: ['bath'] },
 ]
 const LEGEND: { type: EventType; label: string }[] = [
   { type: 'feed', label: 'Feed' },
   { type: 'sleep', label: 'Sleep' },
   { type: 'nappy', label: 'Nappy' },
   { type: 'potty', label: 'Potty' },
-  { type: 'bath', label: 'Bath' },
+  { type: 'bath', label: 'Wash' },
 ]
 const laneIndexOf = (t: EventType) => LANES.findIndex((l) => l.types.includes(t))
 const LANE_H = 30

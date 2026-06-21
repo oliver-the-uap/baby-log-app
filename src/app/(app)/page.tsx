@@ -7,6 +7,7 @@ import { activeSleep } from '@/lib/domain/sleep'
 import { notifyError } from '@/lib/notify'
 import { QuickAdd } from '@/components/QuickAdd'
 import { TodayStats } from '@/components/TodayStats'
+import { SinceLast } from '@/components/SinceLast'
 import { Timeline } from '@/components/Timeline'
 import { TimelineChart } from '@/components/TimelineChart'
 import { ActiveFeedBanner } from '@/components/ActiveFeedBanner'
@@ -89,6 +90,8 @@ export default function HomePage() {
       <BathReminderBanner dob={dob} lastBathAt={lastBath} enabled={settings.bath_reminder_enabled} />
 
       <QuickAdd events={events} onChange={refresh} />
+
+      <SinceLast events={events} lastFeed={lastFeed} lastWash={lastBath} />
 
       <TodayStats events={events} />
 

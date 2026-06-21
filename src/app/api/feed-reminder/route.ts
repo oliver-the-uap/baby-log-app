@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const lastBathAt: string | null = lastB?.[0]?.occurred_at ?? null
     const due = isBathDue(lastBathAt, baby.date_of_birth, now)
     if (shouldSendBathReminder({ due, lastSentAt: settings.last_bath_reminder_sent_at, lastBathAt }, now)) {
-      notes.push({ title: 'Bath reminder', body: `It's been a few days — time for ${baby.name}'s bath.`, tag: 'bath-reminder' })
+      notes.push({ title: 'Wash reminder', body: `It's been a few days — time for ${baby.name}'s bath or shower.`, tag: 'bath-reminder' })
       await sb.from('app_settings').update({ last_bath_reminder_sent_at: now.toISOString() }).eq('id', settings.id)
     }
   }

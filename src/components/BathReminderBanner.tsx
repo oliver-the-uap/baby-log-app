@@ -21,7 +21,7 @@ export function BathReminderBanner({
   if (!isBathDue(lastBathAt, dob, new Date())) return null
   return (
     <div className="w-full bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200 p-3 text-sm">
-      Bath time — it&apos;s been 3+ days since the last bath.
+      Wash time — it&apos;s been 3+ days since the last bath/shower.
     </div>
   )
 }

@@ -32,6 +32,7 @@ export function asEvent(row: Record<string, unknown>): BabyEvent {
     bottle_amount_ml: g('bottle_amount_ml'),
     stat_type: g('stat_type'),
     stat_value: g('stat_value'),
+    wash_kind: g('wash_kind'),
   }
 }
 

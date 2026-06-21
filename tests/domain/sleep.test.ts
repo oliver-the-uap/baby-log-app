@@ -5,7 +5,7 @@ import type { BabyEvent } from '@/lib/domain/types'
 const base: BabyEvent = {
   id: '1', type: 'sleep', occurred_at: '2026-06-21T10:00:00', created_by: 'u', created_at: '',
   nappy_contents: null, feed_method: null, breast_side: null, feed_ended_at: null,
-  sleep_ended_at: null, bottle_amount_ml: null, stat_type: null, stat_value: null,
+  sleep_ended_at: null, bottle_amount_ml: null, stat_type: null, stat_value: null, wash_kind: null,
 }
 
 describe('sleep helpers', () => {

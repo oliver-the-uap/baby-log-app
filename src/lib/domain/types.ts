@@ -3,6 +3,7 @@ export type NappyContents = 'wee' | 'poo' | 'both'
 export type FeedMethod = 'breast' | 'bottle'
 export type BreastSide = 'left' | 'right' | 'both'
 export type StatType = 'weight' | 'height' | 'head'
+export type WashKind = 'bath' | 'shower'
 
 export interface BabyEvent {
   id: string
@@ -18,4 +19,5 @@ export interface BabyEvent {
   bottle_amount_ml: number | null
   stat_type: StatType | null
   stat_value: number | null
+  wash_kind: WashKind | null
 }

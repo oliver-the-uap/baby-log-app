@@ -5,7 +5,7 @@ import type { BabyEvent } from '@/lib/domain/types'
 const base: BabyEvent = {
   id: '1', type: 'feed', occurred_at: '2026-06-20T10:00:00Z', created_by: 'u', created_at: '',
   nappy_contents: null, feed_method: 'breast', breast_side: 'left',
-  feed_ended_at: null, sleep_ended_at: null, bottle_amount_ml: null, stat_type: null, stat_value: null,
+  feed_ended_at: null, sleep_ended_at: null, bottle_amount_ml: null, stat_type: null, stat_value: null, wash_kind: null,
 }
 
 describe('feed helpers', () => {

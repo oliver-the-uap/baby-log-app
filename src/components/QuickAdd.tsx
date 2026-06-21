@@ -4,22 +4,14 @@ import { createEvent, updateEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import { activeSleep } from '@/lib/domain/sleep'
 import { EliminationDialog } from './EliminationDialog'
+import { WashDialog } from './WashDialog'
 import { BodyStatDialog } from './BodyStatDialog'
 import { FeedFlow } from './FeedFlow'
 import type { BabyEvent } from '@/lib/domain/types'
 
 export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: () => void }) {
-  const [open, setOpen] = useState<null | 'elim' | 'feed' | 'stat'>(null)
+  const [open, setOpen] = useState<null | 'elim' | 'wash' | 'feed' | 'stat'>(null)
   const sleeping = activeSleep(events)
-
-  async function bath() {
-    try {
-      await createEvent({ type: 'bath' })
-      onChange()
-    } catch (e) {
-      notifyError(e)
-    }
-  }
 
   async function toggleSleep() {
     try {
@@ -37,8 +29,8 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
         <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('elim')}>
           Nappy / Potty
         </button>
-        <button className="rounded-xl border p-5 text-lg" onClick={bath}>
-          Bath
+        <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('wash')}>
+          Wash
         </button>
         <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('feed')}>
           Feed
@@ -57,6 +49,9 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
       </div>
       {open === 'elim' && (
         <EliminationDialog onClose={() => setOpen(null)} onDone={() => { setOpen(null); onChange() }} />
+      )}
+      {open === 'wash' && (
+        <WashDialog onClose={() => setOpen(null)} onDone={() => { setOpen(null); onChange() }} />
       )}
       {open === 'stat' && (
         <BodyStatDialog onClose={() => setOpen(null)} onDone={() => { setOpen(null); onChange() }} />

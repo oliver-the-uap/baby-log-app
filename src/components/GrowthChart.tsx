@@ -1,6 +1,16 @@
 'use client'
 import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Customized } from 'recharts'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Customized,
+  usePlotArea,
+  useYAxisScale,
+} from 'recharts'
 import type { AgeUnit } from '@/lib/domain/age'
 import { centileSeries, RED_BOOK_CENTILES, MEDIAN_INDEX, type Sex, type Measure } from '@/lib/domain/growthReference'
 import type { BabyEvent } from '@/lib/domain/types'
@@ -18,27 +28,24 @@ const ageInUnit = (occ: string, dob: string, unit: AgeUnit) => {
 type Row = { age: number; value?: number; [k: string]: number | undefined }
 
 // Draw the centile numbers at the right end of each line (printed-chart style),
-// using the chart's y-scale so they sit exactly on their lines.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CentileLabels(props: any) {
-  const map = props?.yAxisMap
-  const offset = props?.offset
-  const last: Row | undefined = props?.lastRow
-  if (!map || !offset || !last) return null
-  const yAxis = map[Object.keys(map)[0]]
-  const scale = yAxis?.scale
-  if (!scale) return null
-  const xRight = offset.left + offset.width
+// using the chart's real y-scale + plot area so they sit exactly on their lines.
+function CentileLabels({ lastRow }: { lastRow?: Row }) {
+  const plot = usePlotArea()
+  const yScale = useYAxisScale()
+  if (!plot || !yScale || !lastRow) return null
+  const xRight = plot.x + plot.width
   return (
     <g>
       {RED_BOOK_CENTILES.map((c, i) => {
-        const v = last[`c${i}`]
+        const v = lastRow[`c${i}`]
         if (v == null) return null
+        const y = Number(yScale(v))
+        if (Number.isNaN(y)) return null
         return (
           <text
             key={c.label}
             x={xRight + 3}
-            y={scale(v)}
+            y={y}
             dy={3}
             fontSize={9}
             fill={i === MEDIAN_INDEX ? '#475569' : '#94a3b8'}
@@ -93,14 +100,11 @@ function MeasureChart({
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
+                tooltipType="none"
               />
             ))}
           <Line dataKey="value" name={title} stroke={color} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
-          {hasRef && (
-            <Customized
-              component={(p: object) => <CentileLabels {...p} lastRow={data[data.length - 1]} />}
-            />
-          )}
+          {hasRef && <Customized component={() => <CentileLabels lastRow={data[data.length - 1]} />} />}
         </LineChart>
       </ResponsiveContainer>
     </div>
