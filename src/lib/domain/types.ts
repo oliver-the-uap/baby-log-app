@@ -1,4 +1,4 @@
-export type EventType = 'nappy' | 'potty' | 'bath' | 'feed' | 'body_stat'
+export type EventType = 'nappy' | 'potty' | 'bath' | 'feed' | 'sleep' | 'body_stat'
 export type NappyContents = 'wee' | 'poo' | 'both'
 export type FeedMethod = 'breast' | 'bottle'
 export type BreastSide = 'left' | 'right' | 'both'
@@ -14,6 +14,7 @@ export interface BabyEvent {
   feed_method: FeedMethod | null
   breast_side: BreastSide | null
   feed_ended_at: string | null
+  sleep_ended_at: string | null
   bottle_amount_ml: number | null
   stat_type: StatType | null
   stat_value: number | null

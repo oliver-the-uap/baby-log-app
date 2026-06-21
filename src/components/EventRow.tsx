@@ -4,7 +4,9 @@ import type { BabyEvent } from '@/lib/domain/types'
 
 export function EventRow({ event, onEdit }: { event: BabyEvent; onEdit: () => void }) {
   const time = new Date(event.occurred_at).toLocaleString()
-  const inProgress = event.type === 'feed' && event.feed_ended_at === null
+  const inProgress =
+    (event.type === 'feed' && event.feed_ended_at === null) ||
+    (event.type === 'sleep' && event.sleep_ended_at === null)
   return (
     <button
       onClick={onEdit}

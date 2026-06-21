@@ -5,7 +5,6 @@ import { notifyError } from '@/lib/notify'
 import type { BabyEvent } from '@/lib/domain/types'
 import { Sheet } from './Sheet'
 
-// Convert an ISO timestamp to the value a <input type="datetime-local"> expects (local time).
 function toLocalInput(iso: string) {
   const d = new Date(iso)
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
@@ -21,12 +20,14 @@ export function EditEventDialog({
   onClose: () => void
   onDone: () => void
 }) {
-  const isFeed = event.type === 'feed'
+  // feeds and sleeps both have an editable end time, in different columns
+  const endCol: 'feed_ended_at' | 'sleep_ended_at' | null =
+    event.type === 'feed' ? 'feed_ended_at' : event.type === 'sleep' ? 'sleep_ended_at' : null
   const [start, setStart] = useState(toLocalInput(event.occurred_at))
-  const [end, setEnd] = useState(event.feed_ended_at ? toLocalInput(event.feed_ended_at) : '')
+  const [end, setEnd] = useState(endCol && event[endCol] ? toLocalInput(event[endCol]!) : '')
 
   const durationMins =
-    isFeed && end ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000) : null
+    endCol && end ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000) : null
 
   async function save() {
     if (durationMins != null && durationMins < 0) {
@@ -34,7 +35,7 @@ export function EditEventDialog({
       return
     }
     const patch: Partial<BabyEvent> = { occurred_at: new Date(start).toISOString() }
-    if (isFeed) patch.feed_ended_at = end ? new Date(end).toISOString() : null
+    if (endCol) patch[endCol] = end ? new Date(end).toISOString() : null
     try {
       await updateEvent(event.id, patch)
       onDone()
@@ -61,7 +62,7 @@ export function EditEventDialog({
         </button>
       }
     >
-      <label className="block text-sm mb-1">{isFeed ? 'Start' : 'Time'}</label>
+      <label className="block text-sm mb-1">{endCol ? 'Start' : 'Time'}</label>
       <input
         type="datetime-local"
         className="w-full border rounded-lg p-3"
@@ -69,7 +70,7 @@ export function EditEventDialog({
         onChange={(e) => setStart(e.target.value)}
       />
 
-      {isFeed && (
+      {endCol && (
         <>
           <label className="block text-sm mb-1 mt-3">End {end ? '' : '(in progress)'}</label>
           <div className="flex gap-2">
@@ -88,7 +89,7 @@ export function EditEventDialog({
             </button>
           </div>
           {end && (
-            <p className="text-sm mt-2 text-gray-600">
+            <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
               {durationMins != null && durationMins >= 0
                 ? `Duration: ${durationMins} min${durationMins === 1 ? '' : 's'}`
                 : 'End is before start'}

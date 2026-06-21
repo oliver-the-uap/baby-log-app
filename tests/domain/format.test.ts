@@ -5,7 +5,7 @@ import type { BabyEvent } from '@/lib/domain/types'
 const e = (p: Partial<BabyEvent>): BabyEvent => ({
   id: '', type: 'nappy', occurred_at: '', created_by: '', created_at: '',
   nappy_contents: null, feed_method: null, breast_side: null, feed_ended_at: null,
-  bottle_amount_ml: null, stat_type: null, stat_value: null, ...p,
+  sleep_ended_at: null, bottle_amount_ml: null, stat_type: null, stat_value: null, ...p,
 })
 
 describe('eventSummary', () => {

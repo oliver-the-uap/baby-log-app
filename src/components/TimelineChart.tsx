@@ -9,11 +9,13 @@ import { EditEventDialog } from './EditEventDialog'
 // One row per lane; nappy + potty share a lane (distinguished by colour).
 const LANES: { label: string; types: EventType[] }[] = [
   { label: 'Feed', types: ['feed'] },
+  { label: 'Sleep', types: ['sleep'] },
   { label: 'Nappy/Potty', types: ['nappy', 'potty'] },
   { label: 'Bath', types: ['bath'] },
 ]
 const LEGEND: { type: EventType; label: string }[] = [
   { type: 'feed', label: 'Feed' },
+  { type: 'sleep', label: 'Sleep' },
   { type: 'nappy', label: 'Nappy' },
   { type: 'potty', label: 'Potty' },
   { type: 'bath', label: 'Bath' },
@@ -25,6 +27,7 @@ const ZOOMS = [40, 80, 150] // px per hour
 
 function colorFor(e: BabyEvent): string {
   if (e.type === 'feed') return e.feed_method === 'bottle' ? 'bg-sky-400' : 'bg-teal-500'
+  if (e.type === 'sleep') return 'bg-violet-500'
   if (e.type === 'nappy') return 'bg-amber-500'
   if (e.type === 'potty') return 'bg-emerald-600'
   return 'bg-purple-500'
@@ -56,6 +59,9 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
       let w = 9
       if (e.type === 'feed') {
         const end = e.feed_ended_at ? new Date(e.feed_ended_at).getTime() : nowTs
+        w = Math.max(7, ((end - start) / 60000) * pxPerMin)
+      } else if (e.type === 'sleep') {
+        const end = e.sleep_ended_at ? new Date(e.sleep_ended_at).getTime() : nowTs
         w = Math.max(7, ((end - start) / 60000) * pxPerMin)
       }
       return { e, lane, left: xOf(start), w }

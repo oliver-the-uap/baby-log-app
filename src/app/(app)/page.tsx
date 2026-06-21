@@ -1,14 +1,16 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { recentForState, lastFeedStart, lastWeightAt, lastBathAt } from '@/lib/data/events'
+import { recentForState, lastFeedStart, lastWeightAt, lastBathAt, updateEvent } from '@/lib/data/events'
 import { getSettings } from '@/lib/data/settings'
 import { getBaby } from '@/lib/data/baby'
+import { activeSleep } from '@/lib/domain/sleep'
 import { notifyError } from '@/lib/notify'
 import { QuickAdd } from '@/components/QuickAdd'
 import { TodayStats } from '@/components/TodayStats'
 import { Timeline } from '@/components/Timeline'
 import { TimelineChart } from '@/components/TimelineChart'
 import { ActiveFeedBanner } from '@/components/ActiveFeedBanner'
+import { ActiveSleepBanner } from '@/components/ActiveSleepBanner'
 import { OverdueFeedBanner } from '@/components/OverdueFeedBanner'
 import { WeightReminderBanner } from '@/components/WeightReminderBanner'
 import { BathReminderBanner } from '@/components/BathReminderBanner'
@@ -62,9 +64,21 @@ export default function HomePage() {
     refresh()
   }, [refresh])
 
+  async function wake() {
+    const active = activeSleep(events)
+    if (!active) return
+    try {
+      await updateEvent(active.id, { sleep_ended_at: new Date().toISOString() })
+      refresh()
+    } catch (e) {
+      notifyError(e)
+    }
+  }
+
   return (
     <main>
       <ActiveFeedBanner events={events} onStop={() => setStopOpen(true)} />
+      <ActiveSleepBanner events={events} onWake={wake} />
       <OverdueFeedBanner
         events={events}
         lastFeedAt={lastFeed}

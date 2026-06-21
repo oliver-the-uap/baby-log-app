@@ -1,7 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { feedingTodayMinutes } from '@/lib/domain/feed'
+import { sleepingTodayMinutes } from '@/lib/domain/sleep'
 import type { BabyEvent } from '@/lib/domain/types'
+
+const hm = (mins: number) => {
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return `${h > 0 ? `${h}h ` : ''}${m}m`
+}
 
 export function TodayStats({ events }: { events: BabyEvent[] }) {
   // re-render each minute so the % keeps up (esp. during an in-progress feed)
@@ -13,9 +20,8 @@ export function TodayStats({ events }: { events: BabyEvent[] }) {
 
   const now = new Date()
   const { percent, feedMinutes, feeds } = feedingTodayMinutes(events, now)
-  const h = Math.floor(feedMinutes / 60)
-  const m = feedMinutes % 60
-  const dur = `${h > 0 ? `${h}h ` : ''}${m}m`
+  const dur = hm(feedMinutes)
+  const sleptMins = sleepingTodayMinutes(events, now)
 
   const midnight = new Date(now)
   midnight.setHours(0, 0, 0, 0)
@@ -31,6 +37,10 @@ export function TodayStats({ events }: { events: BabyEvent[] }) {
           <span className="font-semibold">
             {percent}% · {dur} · {feeds} feed{feeds === 1 ? '' : 's'}
           </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-600 dark:text-gray-300">Slept today</span>
+          <span className="font-semibold">{hm(sleptMins)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-600 dark:text-gray-300">Nappies / potties today</span>

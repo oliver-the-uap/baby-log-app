@@ -1,5 +1,6 @@
 import type { BabyEvent, NappyContents } from './types'
 import { feedDurationMinutes } from './feed'
+import { sleepDurationMinutes } from './sleep'
 
 function contentsLabel(c: NappyContents | null): string {
   const m = { wee: 'wee', poo: 'poo', both: 'wee & poo' } as const
@@ -21,6 +22,13 @@ export function eventSummary(e: BabyEvent): string {
       return `Potty — ${contentsLabel(e.nappy_contents)}`
     case 'bath':
       return 'Bath'
+    case 'sleep': {
+      const mins = sleepDurationMinutes(e)
+      if (mins == null || mins <= 0) return 'Sleep'
+      const h = Math.floor(mins / 60)
+      const m = mins % 60
+      return `Sleep — ${h > 0 ? `${h}h ` : ''}${m}m`
+    }
     case 'feed': {
       const dur = durationSuffix(e)
       if (e.feed_method === 'breast') {
