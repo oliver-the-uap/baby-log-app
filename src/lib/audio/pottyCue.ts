@@ -12,18 +12,19 @@ function makeNoise(ctx: BaseAudioContext, seconds: number): AudioBufferSourceNod
 }
 
 function grunt(ctx: BaseAudioContext, dest: AudioNode, start: number) {
-  const dur = 0.38
+  const dur = 0.5
   // low pitched body that drops slightly (a strain)
   const osc = ctx.createOscillator()
   osc.type = 'sawtooth'
-  osc.frequency.setValueAtTime(125, start)
-  osc.frequency.linearRampToValueAtTime(80, start + dur)
+  osc.frequency.setValueAtTime(130, start)
+  osc.frequency.linearRampToValueAtTime(78, start + dur)
   const lp = ctx.createBiquadFilter()
   lp.type = 'lowpass'
-  lp.frequency.value = 520
+  lp.frequency.value = 750
   const g = ctx.createGain()
   g.gain.setValueAtTime(0.0001, start)
-  g.gain.linearRampToValueAtTime(0.8, start + 0.05)
+  g.gain.linearRampToValueAtTime(1.0, start + 0.06)
+  g.gain.setValueAtTime(0.85, start + dur * 0.55)
   g.gain.exponentialRampToValueAtTime(0.0001, start + dur)
   osc.connect(lp)
   lp.connect(g)
@@ -35,10 +36,10 @@ function grunt(ctx: BaseAudioContext, dest: AudioNode, start: number) {
   const n = makeNoise(ctx, dur + 0.05)
   const nlp = ctx.createBiquadFilter()
   nlp.type = 'lowpass'
-  nlp.frequency.value = 700
+  nlp.frequency.value = 950
   const ng = ctx.createGain()
   ng.gain.setValueAtTime(0.0001, start)
-  ng.gain.linearRampToValueAtTime(0.25, start + 0.05)
+  ng.gain.linearRampToValueAtTime(0.4, start + 0.06)
   ng.gain.exponentialRampToValueAtTime(0.0001, start + dur)
   n.connect(nlp)
   nlp.connect(ng)
@@ -57,8 +58,8 @@ export async function buildCueBuffer(sampleRate = 44100): Promise<AudioBuffer> {
   master.gain.value = 0.7
   master.connect(ctx.destination)
 
-  // --- grunts, ~0.3s .. 9.6s ---
-  for (let t = 0.3; t < 9.6; t += 0.95 + Math.random() * 0.5) grunt(ctx, master, t)
+  // --- grunts, ~0.3s .. 9.7s ---
+  for (let t = 0.3; t < 9.6; t += 0.8 + Math.random() * 0.4) grunt(ctx, master, t)
 
   // --- running water / pss, 10s .. 20s ---
   const water = makeNoise(ctx, 10)
@@ -69,9 +70,11 @@ export async function buildCueBuffer(sampleRate = 44100): Promise<AudioBuffer> {
   lp.type = 'lowpass'
   lp.frequency.value = 5500
   const wg = ctx.createGain()
+  // much quieter than before (continuous noise reads far louder than the grunts)
+  // and held at full level right up to ~19.8s so it clearly fills its 10 seconds
   wg.gain.setValueAtTime(0.0001, 10)
-  wg.gain.linearRampToValueAtTime(0.55, 10.6)
-  wg.gain.setValueAtTime(0.55, 19.2)
+  wg.gain.linearRampToValueAtTime(0.22, 10.2)
+  wg.gain.setValueAtTime(0.22, 19.8)
   wg.gain.linearRampToValueAtTime(0.0001, 20)
   // gentle shimmer so it sounds like flowing water, not flat hiss
   const lfo = ctx.createOscillator()
