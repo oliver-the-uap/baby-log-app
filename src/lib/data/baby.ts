@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { cachedValue } from '@/lib/offline/sync'
 import type { Sex } from '@/lib/domain/growthReference'
 
 export interface Baby {
@@ -8,10 +9,18 @@ export interface Baby {
   gender: Sex | null
 }
 
+const DEFAULT_BABY: Baby = { id: '', name: '', date_of_birth: '2025-01-01', gender: null }
+
 export async function getBaby(): Promise<Baby> {
-  const { data, error } = await createClient().from('baby').select('*').single()
-  if (error) throw error
-  return data as Baby
+  return cachedValue(
+    'baby',
+    async () => {
+      const { data, error } = await createClient().from('baby').select('*').single()
+      if (error) throw error
+      return data as Baby
+    },
+    DEFAULT_BABY,
+  )
 }
 
 export async function updateBaby(

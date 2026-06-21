@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { cachedValue } from '@/lib/offline/sync'
 
 export interface AppSettings {
   id: string
@@ -11,10 +12,27 @@ export interface AppSettings {
   last_bath_reminder_sent_at: string | null
 }
 
+const DEFAULT_SETTINGS: AppSettings = {
+  id: '',
+  feed_reminder_enabled: true,
+  feed_reminder_hours: 4,
+  last_feed_reminder_sent_at: null,
+  weight_reminder_enabled: true,
+  last_weight_reminder_sent_at: null,
+  bath_reminder_enabled: true,
+  last_bath_reminder_sent_at: null,
+}
+
 export async function getSettings(): Promise<AppSettings> {
-  const { data, error } = await createClient().from('app_settings').select('*').single()
-  if (error) throw error
-  return data as AppSettings
+  return cachedValue(
+    'settings',
+    async () => {
+      const { data, error } = await createClient().from('app_settings').select('*').single()
+      if (error) throw error
+      return data as AppSettings
+    },
+    DEFAULT_SETTINGS,
+  )
 }
 
 export async function updateSettings(
