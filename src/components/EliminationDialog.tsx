@@ -4,6 +4,7 @@ import { createEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import type { NappyContents } from '@/lib/domain/types'
 import { Sheet } from './Sheet'
+import { PottyCueButton } from './PottyCueButton'
 
 // Nappy / Potty → choose location → choose wee / poo / both.
 export function EliminationDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
@@ -35,6 +36,7 @@ export function EliminationDialog({ onClose, onDone }: { onClose: () => void; on
 
   return (
     <Sheet title={place === 'nappy' ? 'Nappy' : 'Potty'} onClose={onClose}>
+      {place === 'potty' && <PottyCueButton />}
       <div className="grid grid-cols-3 gap-3">
         {(['wee', 'poo', 'both'] as const).map((c) => (
           <button key={c} onClick={() => log(c)} className="rounded-xl border p-4 capitalize">
