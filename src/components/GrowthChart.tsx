@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Customized } from 'recharts'
 import type { AgeUnit } from '@/lib/domain/age'
 import { centileSeries, RED_BOOK_CENTILES, MEDIAN_INDEX, type Sex, type Measure } from '@/lib/domain/growthReference'
 import type { BabyEvent } from '@/lib/domain/types'
@@ -17,16 +17,38 @@ const ageInUnit = (occ: string, dob: string, unit: AgeUnit) => {
 
 type Row = { age: number; value?: number; [k: string]: number | undefined }
 
-// Render a small centile number at the line's rightmost point (printed-chart style).
-// Typed as `any` because Recharts' label content signature is awkward to satisfy.
+// Draw the centile numbers at the right end of each line (printed-chart style),
+// using the chart's y-scale so they sit exactly on their lines.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rightLabel(text: string, lastIndex: number, emphasized: boolean): any {
-  return (p: { x?: number; y?: number; index?: number }) =>
-    p.index === lastIndex && p.x != null && p.y != null ? (
-      <text x={p.x + 4} y={p.y} dy={3} fontSize={9} fill={emphasized ? '#475569' : '#94a3b8'}>
-        {text}
-      </text>
-    ) : null
+function CentileLabels(props: any) {
+  const map = props?.yAxisMap
+  const offset = props?.offset
+  const last: Row | undefined = props?.lastRow
+  if (!map || !offset || !last) return null
+  const yAxis = map[Object.keys(map)[0]]
+  const scale = yAxis?.scale
+  if (!scale) return null
+  const xRight = offset.left + offset.width
+  return (
+    <g>
+      {RED_BOOK_CENTILES.map((c, i) => {
+        const v = last[`c${i}`]
+        if (v == null) return null
+        return (
+          <text
+            key={c.label}
+            x={xRight + 3}
+            y={scale(v)}
+            dy={3}
+            fontSize={9}
+            fill={i === MEDIAN_INDEX ? '#475569' : '#94a3b8'}
+          >
+            {c.label.replace(/\D/g, '')}
+          </text>
+        )
+      })}
+    </g>
+  )
 }
 
 function MeasureChart({
@@ -71,10 +93,14 @@ function MeasureChart({
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
-                label={rightLabel(c.label.replace(/\D/g, ''), data.length - 1, i === MEDIAN_INDEX)}
               />
             ))}
           <Line dataKey="value" name={title} stroke={color} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
+          {hasRef && (
+            <Customized
+              component={(p: object) => <CentileLabels {...p} lastRow={data[data.length - 1]} />}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>
