@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { recentForState, lastFeedStart, lastWeightAt } from '@/lib/data/events'
+import { recentForState, lastFeedStart, lastWeightAt, lastBathAt } from '@/lib/data/events'
 import { getSettings } from '@/lib/data/settings'
 import { getBaby } from '@/lib/data/baby'
 import { notifyError } from '@/lib/notify'
@@ -11,6 +11,7 @@ import { TimelineChart } from '@/components/TimelineChart'
 import { ActiveFeedBanner } from '@/components/ActiveFeedBanner'
 import { OverdueFeedBanner } from '@/components/OverdueFeedBanner'
 import { WeightReminderBanner } from '@/components/WeightReminderBanner'
+import { BathReminderBanner } from '@/components/BathReminderBanner'
 import { FeedFlow } from '@/components/FeedFlow'
 import type { BabyEvent } from '@/lib/domain/types'
 
@@ -18,11 +19,13 @@ export default function HomePage() {
   const [events, setEvents] = useState<BabyEvent[]>([])
   const [lastFeed, setLastFeed] = useState<string | null>(null)
   const [lastWeight, setLastWeight] = useState<string | null>(null)
+  const [lastBath, setLastBath] = useState<string | null>(null)
   const [dob, setDob] = useState<string | null>(null)
   const [settings, setSettings] = useState({
     feed_reminder_enabled: true,
     feed_reminder_hours: 4,
     weight_reminder_enabled: true,
+    bath_reminder_enabled: true,
   })
   const [refreshKey, setRefreshKey] = useState(0)
   const [stopOpen, setStopOpen] = useState(false)
@@ -30,21 +33,24 @@ export default function HomePage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [evs, lf, lw, s, baby] = await Promise.all([
+      const [evs, lf, lw, lb, s, baby] = await Promise.all([
         recentForState(),
         lastFeedStart(),
         lastWeightAt(),
+        lastBathAt(),
         getSettings(),
         getBaby(),
       ])
       setEvents(evs)
       setLastFeed(lf)
       setLastWeight(lw)
+      setLastBath(lb)
       setDob(baby.date_of_birth)
       setSettings({
         feed_reminder_enabled: s.feed_reminder_enabled,
         feed_reminder_hours: Number(s.feed_reminder_hours),
         weight_reminder_enabled: s.weight_reminder_enabled,
+        bath_reminder_enabled: s.bath_reminder_enabled,
       })
       setRefreshKey((k) => k + 1)
     } catch (e) {
@@ -66,6 +72,7 @@ export default function HomePage() {
         hours={settings.feed_reminder_hours}
       />
       <WeightReminderBanner dob={dob} lastWeightAt={lastWeight} enabled={settings.weight_reminder_enabled} />
+      <BathReminderBanner dob={dob} lastBathAt={lastBath} enabled={settings.bath_reminder_enabled} />
 
       <QuickAdd events={events} onChange={refresh} />
 

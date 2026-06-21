@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [enabled, setEnabled] = useState(true)
   const [hours, setHours] = useState(4)
   const [weightOn, setWeightOn] = useState(true)
+  const [bathOn, setBathOn] = useState(true)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function SettingsPage() {
         setEnabled(s.feed_reminder_enabled)
         setHours(Number(s.feed_reminder_hours))
         setWeightOn(s.weight_reminder_enabled)
+        setBathOn(s.bath_reminder_enabled)
       })
       .catch(notifyError)
   }, [])
@@ -40,6 +42,7 @@ export default function SettingsPage() {
         feed_reminder_enabled: enabled,
         feed_reminder_hours: hours,
         weight_reminder_enabled: weightOn,
+        bath_reminder_enabled: bathOn,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
@@ -112,6 +115,17 @@ export default function SettingsPage() {
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Reminds you to log a weight every 4 days until 12 weeks, then weekly for the rest of the first year.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-medium">Bath reminder</h2>
+        <label className="flex items-center justify-between">
+          <span>Bath / shower reminder</span>
+          <input type="checkbox" checked={bathOn} onChange={(e) => setBathOn(e.target.checked)} />
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Reminds you when it&apos;s been 3 days since the last bath or shower.
         </p>
       </section>
 

@@ -3,6 +3,7 @@ import webpush from 'web-push'
 import { createServiceClient } from '@/lib/supabase/service'
 import { isFeedOverdue, shouldSendReminder } from '@/lib/domain/reminder'
 import { isWeightDue, shouldSendWeightReminder, weightIntervalDays } from '@/lib/domain/weightReminder'
+import { isBathDue, shouldSendBathReminder } from '@/lib/domain/bathReminder'
 
 export const runtime = 'nodejs'
 
@@ -39,25 +40,38 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // baby record is shared by the weight + bath reminders
+  let baby: { name: string; date_of_birth: string } | null = null
+  if (settings.weight_reminder_enabled || settings.bath_reminder_enabled) {
+    const { data } = await sb.from('baby').select('name, date_of_birth').single()
+    baby = data
+  }
+
   // --- Weight reminder ---
-  if (settings.weight_reminder_enabled) {
-    const { data: baby } = await sb.from('baby').select('name, date_of_birth').single()
-    if (baby?.date_of_birth) {
-      const { data: lastW } = await sb
-        .from('events').select('occurred_at')
-        .eq('type', 'body_stat').eq('stat_type', 'weight')
-        .order('occurred_at', { ascending: false }).limit(1)
-      const lastWeightAt: string | null = lastW?.[0]?.occurred_at ?? null
-      const due = isWeightDue(lastWeightAt, baby.date_of_birth, now)
-      if (shouldSendWeightReminder({ due, lastSentAt: settings.last_weight_reminder_sent_at, lastWeightAt }, now)) {
-        const interval = weightIntervalDays((now.getTime() - new Date(baby.date_of_birth).getTime()) / 86_400_000)
-        notes.push({
-          title: 'Weigh-in reminder',
-          body: `Time to log ${baby.name}'s weight (every ${interval} days).`,
-          tag: 'weight-reminder',
-        })
-        await sb.from('app_settings').update({ last_weight_reminder_sent_at: now.toISOString() }).eq('id', settings.id)
-      }
+  if (settings.weight_reminder_enabled && baby?.date_of_birth) {
+    const { data: lastW } = await sb
+      .from('events').select('occurred_at')
+      .eq('type', 'body_stat').eq('stat_type', 'weight')
+      .order('occurred_at', { ascending: false }).limit(1)
+    const lastWeightAt: string | null = lastW?.[0]?.occurred_at ?? null
+    const due = isWeightDue(lastWeightAt, baby.date_of_birth, now)
+    if (shouldSendWeightReminder({ due, lastSentAt: settings.last_weight_reminder_sent_at, lastWeightAt }, now)) {
+      const interval = weightIntervalDays((now.getTime() - new Date(baby.date_of_birth).getTime()) / 86_400_000)
+      notes.push({ title: 'Weigh-in reminder', body: `Time to log ${baby.name}'s weight (every ${interval} days).`, tag: 'weight-reminder' })
+      await sb.from('app_settings').update({ last_weight_reminder_sent_at: now.toISOString() }).eq('id', settings.id)
+    }
+  }
+
+  // --- Bath reminder ---
+  if (settings.bath_reminder_enabled && baby?.date_of_birth) {
+    const { data: lastB } = await sb
+      .from('events').select('occurred_at')
+      .eq('type', 'bath').order('occurred_at', { ascending: false }).limit(1)
+    const lastBathAt: string | null = lastB?.[0]?.occurred_at ?? null
+    const due = isBathDue(lastBathAt, baby.date_of_birth, now)
+    if (shouldSendBathReminder({ due, lastSentAt: settings.last_bath_reminder_sent_at, lastBathAt }, now)) {
+      notes.push({ title: 'Bath reminder', body: `It's been a few days — time for ${baby.name}'s bath.`, tag: 'bath-reminder' })
+      await sb.from('app_settings').update({ last_bath_reminder_sent_at: now.toISOString() }).eq('id', settings.id)
     }
   }
 
