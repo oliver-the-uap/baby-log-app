@@ -30,11 +30,12 @@ export function SinceLast({
   }, [])
 
   const lastSleep = events.find((e) => e.type === 'sleep')?.occurred_at ?? null
-  const lastPotty = events.find((e) => e.type === 'potty')?.occurred_at ?? null
+  // "nappy/potty" = the last elimination, whether on the potty or in a nappy
+  const lastChange = events.find((e) => e.type === 'potty' || e.type === 'nappy')?.occurred_at ?? null
   const items: [string, string | null][] = [
     ['Feed', lastFeed],
     ['Sleep', lastSleep],
-    ['Potty', lastPotty],
+    ['Nappy/potty', lastChange],
     ['Wash', lastWash],
   ]
 
@@ -43,7 +44,9 @@ export function SinceLast({
       <div className="grid grid-cols-4 gap-2 text-center">
         {items.map(([label, ts]) => (
           <div key={label} className="rounded-lg border p-2">
-            <div className="text-[11px] text-gray-500 dark:text-gray-400">Last {label.toLowerCase()}</div>
+            <div className="text-[11px] leading-tight text-gray-500 dark:text-gray-400">
+              Last {label.toLowerCase()}
+            </div>
             <div className="font-semibold text-sm tabular-nums">{ago(ts, now)}</div>
           </div>
         ))}
