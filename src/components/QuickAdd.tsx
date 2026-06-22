@@ -10,6 +10,11 @@ import { BodyStatDialog } from './BodyStatDialog'
 import { FeedFlow } from './FeedFlow'
 import type { BabyEvent } from '@/lib/domain/types'
 
+function sameDay(iso: string, now: Date): boolean {
+  const d = new Date(iso)
+  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+}
+
 export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: () => void }) {
   const [open, setOpen] = useState<null | 'elim' | 'wash' | 'feed' | 'stat'>(null)
   const sleeping = activeSleep(events)
@@ -45,6 +50,25 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
     }
   }
 
+  const vitdToday = events.find((e) => e.type === 'vitamin_d' && sameDay(e.occurred_at, new Date()))
+  async function giveVitd() {
+    if (vitdToday) return
+    try {
+      const ev = await createEvent({ type: 'vitamin_d' })
+      showToast('Vitamin D logged', async () => {
+        try {
+          await deleteEvent(ev.id)
+          onChange()
+        } catch (e) {
+          notifyError(e)
+        }
+      })
+      onChange()
+    } catch (e) {
+      notifyError(e)
+    }
+  }
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3 p-4">
@@ -65,8 +89,18 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
         >
           {sleeping ? 'Wake up' : 'Sleep'}
         </button>
-        <button className="rounded-xl border p-5 text-lg col-span-2" onClick={() => setOpen('stat')}>
+        <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('stat')}>
           Body stat
+        </button>
+        <button
+          onClick={giveVitd}
+          className={`rounded-xl border p-5 text-lg ${
+            vitdToday
+              ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200'
+              : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200'
+          }`}
+        >
+          {vitdToday ? 'Vitamin D ✓' : 'Vitamin D'}
         </button>
       </div>
       {open === 'elim' && (

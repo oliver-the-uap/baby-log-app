@@ -9,7 +9,6 @@ import { useToast } from '@/components/ToastProvider'
 import { QuickAdd } from '@/components/QuickAdd'
 import { TodayStats } from '@/components/TodayStats'
 import { SinceLast } from '@/components/SinceLast'
-import { VitaminD } from '@/components/VitaminD'
 import { Timeline } from '@/components/Timeline'
 import { TimelineChart } from '@/components/TimelineChart'
 import { ActiveFeedBanner } from '@/components/ActiveFeedBanner'
@@ -100,8 +99,6 @@ export default function HomePage() {
       />
       <WeightReminderBanner dob={dob} lastWeightAt={lastWeight} enabled={settings.weight_reminder_enabled} />
       <BathReminderBanner dob={dob} lastBathAt={lastBath} enabled={settings.bath_reminder_enabled} />
-
-      <VitaminD events={events} onChange={refresh} />
 
       <QuickAdd events={events} onChange={refresh} />
 
