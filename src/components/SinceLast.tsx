@@ -49,7 +49,7 @@ export function SinceLast({
   const items: { key: string; label: string; value: string }[] = [
     { key: 'feed', label: 'Last feed', value: ago(lastFeed, now) },
     { key: 'sleep', label: sleepLabel, value: sleepValue },
-    { key: 'change', label: 'Last nappy/potty', value: ago(lastChange, now) },
+    { key: 'change', label: 'Last elimination', value: ago(lastChange, now) },
     { key: 'wash', label: 'Last wash', value: ago(lastWash, now) },
   ]
 
