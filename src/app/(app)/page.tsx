@@ -102,7 +102,7 @@ export default function HomePage() {
 
       <QuickAdd events={events} onChange={refresh} />
 
-      <SinceLast events={events} lastFeed={lastFeed} lastWash={lastBath} />
+      <SinceLast events={events} lastWash={lastBath} />
 
       <TodayStats events={events} />
 

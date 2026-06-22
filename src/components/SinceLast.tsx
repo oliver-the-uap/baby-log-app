@@ -14,15 +14,7 @@ function ago(iso: string | null, now: number): string {
   return `${m}m`
 }
 
-export function SinceLast({
-  events,
-  lastFeed,
-  lastWash,
-}: {
-  events: BabyEvent[]
-  lastFeed: string | null
-  lastWash: string | null
-}) {
+export function SinceLast({ events, lastWash }: { events: BabyEvent[]; lastWash: string | null }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000)
@@ -32,7 +24,21 @@ export function SinceLast({
   // last elimination, whether on the potty or in a nappy
   const lastChange = events.find((e) => e.type === 'potty' || e.type === 'nappy')?.occurred_at ?? null
 
-  // sleep: show live status — asleep (how long) or awake (how long since waking)
+  // feed: live status — feeding now (how long), or how long since the last feed ended
+  const lastFeed = events.find((e) => e.type === 'feed')
+  let feedLabel = 'Last feed'
+  let feedValue = '—'
+  if (lastFeed) {
+    if (lastFeed.feed_ended_at == null) {
+      feedLabel = 'Feeding'
+      feedValue = ago(lastFeed.occurred_at, now)
+    } else {
+      feedLabel = 'Last fed'
+      feedValue = ago(lastFeed.feed_ended_at, now)
+    }
+  }
+
+  // sleep: live status — asleep (how long), or how long since waking
   const lastSleep = events.find((e) => e.type === 'sleep')
   let sleepLabel = 'Last sleep'
   let sleepValue = '—'
@@ -47,7 +53,7 @@ export function SinceLast({
   }
 
   const items: { key: string; label: string; value: string }[] = [
-    { key: 'feed', label: 'Last feed', value: ago(lastFeed, now) },
+    { key: 'feed', label: feedLabel, value: feedValue },
     { key: 'sleep', label: sleepLabel, value: sleepValue },
     { key: 'change', label: 'Last elimination', value: ago(lastChange, now) },
     { key: 'wash', label: 'Last wash', value: ago(lastWash, now) },
