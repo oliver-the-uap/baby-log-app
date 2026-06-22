@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [hours, setHours] = useState(4)
   const [weightOn, setWeightOn] = useState(true)
   const [bathOn, setBathOn] = useState(true)
+  const [vitdOn, setVitdOn] = useState(true)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function SettingsPage() {
         setHours(Number(s.feed_reminder_hours))
         setWeightOn(s.weight_reminder_enabled)
         setBathOn(s.bath_reminder_enabled)
+        setVitdOn(s.vitd_reminder_enabled)
       })
       .catch(notifyError)
   }, [])
@@ -43,6 +45,7 @@ export default function SettingsPage() {
         feed_reminder_hours: hours,
         weight_reminder_enabled: weightOn,
         bath_reminder_enabled: bathOn,
+        vitd_reminder_enabled: vitdOn,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
@@ -126,6 +129,17 @@ export default function SettingsPage() {
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Reminds you when it&apos;s been 3 days since the last bath or shower.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-medium">Vitamin D reminder</h2>
+        <label className="flex items-center justify-between">
+          <span>Daily vitamin D reminder</span>
+          <input type="checkbox" checked={vitdOn} onChange={(e) => setVitdOn(e.target.checked)} />
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          An evening nudge if the daily vitamin D drop hasn&apos;t been logged yet.
         </p>
       </section>
 

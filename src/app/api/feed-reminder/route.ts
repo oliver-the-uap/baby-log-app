@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   // baby record is shared by the weight + bath reminders
   let baby: { name: string; date_of_birth: string } | null = null
-  if (settings.weight_reminder_enabled || settings.bath_reminder_enabled) {
+  if (settings.weight_reminder_enabled || settings.bath_reminder_enabled || settings.vitd_reminder_enabled) {
     const { data } = await sb.from('baby').select('name, date_of_birth').single()
     baby = data
   }
@@ -72,6 +72,35 @@ export async function POST(req: NextRequest) {
     if (shouldSendBathReminder({ due, lastSentAt: settings.last_bath_reminder_sent_at, lastBathAt }, now)) {
       notes.push({ title: 'Wash reminder', body: `It's been a few days — time for ${baby.name}'s bath or shower.`, tag: 'bath-reminder' })
       await sb.from('app_settings').update({ last_bath_reminder_sent_at: now.toISOString() }).eq('id', settings.id)
+    }
+  }
+
+  // --- Vitamin D reminder (evening nudge if not logged today) ---
+  if (settings.vitd_reminder_enabled && baby?.name) {
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      hour12: false,
+    })
+    const parts = (d: Date) => {
+      const p = fmt.formatToParts(d)
+      const g = (t: string) => p.find((x) => x.type === t)?.value ?? ''
+      return { date: `${g('year')}-${g('month')}-${g('day')}`, hour: parseInt(g('hour'), 10) }
+    }
+    const todayLondon = parts(now)
+    const { data: lastVitd } = await sb
+      .from('events').select('occurred_at')
+      .eq('type', 'vitamin_d').order('occurred_at', { ascending: false }).limit(1)
+    const givenToday = lastVitd?.[0] ? parts(new Date(lastVitd[0].occurred_at)).date === todayLondon.date : false
+    const sentToday = settings.last_vitd_reminder_sent_at
+      ? parts(new Date(settings.last_vitd_reminder_sent_at)).date === todayLondon.date
+      : false
+    if (!givenToday && !sentToday && todayLondon.hour >= 17) {
+      notes.push({ title: 'Vitamin D', body: `Has ${baby.name} had her vitamin D drop today?`, tag: 'vitd-reminder' })
+      await sb.from('app_settings').update({ last_vitd_reminder_sent_at: now.toISOString() }).eq('id', settings.id)
     }
   }
 

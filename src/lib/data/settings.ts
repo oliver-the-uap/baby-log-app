@@ -10,6 +10,8 @@ export interface AppSettings {
   last_weight_reminder_sent_at: string | null
   bath_reminder_enabled: boolean
   last_bath_reminder_sent_at: string | null
+  vitd_reminder_enabled: boolean
+  last_vitd_reminder_sent_at: string | null
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -21,6 +23,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   last_weight_reminder_sent_at: null,
   bath_reminder_enabled: true,
   last_bath_reminder_sent_at: null,
+  vitd_reminder_enabled: true,
+  last_vitd_reminder_sent_at: null,
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -43,6 +47,7 @@ export async function updateSettings(
       | 'feed_reminder_hours'
       | 'weight_reminder_enabled'
       | 'bath_reminder_enabled'
+      | 'vitd_reminder_enabled'
     >
   >,
 ): Promise<void> {

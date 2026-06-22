@@ -22,6 +22,8 @@ export function eventSummary(e: BabyEvent): string {
       return `Potty — ${contentsLabel(e.nappy_contents)}`
     case 'bath':
       return e.wash_kind ? `Wash — ${e.wash_kind}` : 'Wash'
+    case 'vitamin_d':
+      return 'Vitamin D'
     case 'sleep': {
       const mins = sleepDurationMinutes(e)
       if (mins == null || mins <= 0) return 'Sleep'
