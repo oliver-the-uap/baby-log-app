@@ -29,25 +29,37 @@ export function SinceLast({
     return () => clearInterval(id)
   }, [])
 
-  const lastSleep = events.find((e) => e.type === 'sleep')?.occurred_at ?? null
-  // "nappy/potty" = the last elimination, whether on the potty or in a nappy
+  // last elimination, whether on the potty or in a nappy
   const lastChange = events.find((e) => e.type === 'potty' || e.type === 'nappy')?.occurred_at ?? null
-  const items: [string, string | null][] = [
-    ['Feed', lastFeed],
-    ['Sleep', lastSleep],
-    ['Nappy/potty', lastChange],
-    ['Wash', lastWash],
+
+  // sleep: show live status — asleep (how long) or awake (how long since waking)
+  const lastSleep = events.find((e) => e.type === 'sleep')
+  let sleepLabel = 'Last sleep'
+  let sleepValue = '—'
+  if (lastSleep) {
+    if (lastSleep.sleep_ended_at == null) {
+      sleepLabel = 'Asleep'
+      sleepValue = ago(lastSleep.occurred_at, now)
+    } else {
+      sleepLabel = 'Awake'
+      sleepValue = ago(lastSleep.sleep_ended_at, now)
+    }
+  }
+
+  const items: { key: string; label: string; value: string }[] = [
+    { key: 'feed', label: 'Last feed', value: ago(lastFeed, now) },
+    { key: 'sleep', label: sleepLabel, value: sleepValue },
+    { key: 'change', label: 'Last nappy/potty', value: ago(lastChange, now) },
+    { key: 'wash', label: 'Last wash', value: ago(lastWash, now) },
   ]
 
   return (
     <div className="px-4 pb-1">
       <div className="grid grid-cols-4 gap-2 text-center">
-        {items.map(([label, ts]) => (
-          <div key={label} className="rounded-lg border p-2">
-            <div className="text-[11px] leading-tight text-gray-500 dark:text-gray-400">
-              Last {label.toLowerCase()}
-            </div>
-            <div className="font-semibold text-sm tabular-nums">{ago(ts, now)}</div>
+        {items.map((it) => (
+          <div key={it.key} className="rounded-lg border p-2">
+            <div className="text-[11px] leading-tight text-gray-500 dark:text-gray-400">{it.label}</div>
+            <div className="font-semibold text-sm tabular-nums">{it.value}</div>
           </div>
         ))}
       </div>
