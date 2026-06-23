@@ -4,8 +4,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -227,35 +227,35 @@ export default function DaysPage() {
         </div>
       </section>
 
-      {/* OPTION C — two-week trend bars */}
+      {/* OPTION C — two-week trend line, dual y-axis */}
       <section>
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
           Option C · Two-week trends
         </h2>
-        <div className="rounded-xl border p-3 space-y-4">
-          <div>
-            <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Sleep hours / day</div>
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart data={trend} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                <XAxis dataKey="label" tick={{ fontSize: 9 }} interval={0} />
-                <YAxis width={28} tick={{ fontSize: 9 }} />
-                <Tooltip formatter={(v) => [`${v} h`, 'Sleep']} />
-                <Bar dataKey="sleepH" fill={SLEEP} radius={[2, 2, 0, 0]} isAnimationActive={false} />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="rounded-xl border p-3 space-y-2">
+          <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-300">
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-[3px] rounded" style={{ background: SLEEP }} /> Sleep hours
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-[3px] rounded" style={{ background: FEED }} /> Feeds
+            </span>
           </div>
-          <div>
-            <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Feeds / day</div>
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart data={trend} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                <XAxis dataKey="label" tick={{ fontSize: 9 }} interval={0} />
-                <YAxis width={28} tick={{ fontSize: 9 }} allowDecimals={false} />
-                <Tooltip formatter={(v) => [`${v}`, 'Feeds']} />
-                <Bar dataKey="feeds" fill={FEED} radius={[2, 2, 0, 0]} isAnimationActive={false} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="text-[11px] text-gray-400 dark:text-gray-500">Left = earlier · rightmost = today (partial).</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={trend} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
+              <XAxis dataKey="label" tick={{ fontSize: 9 }} interval={0} />
+              <YAxis yAxisId="sleep" width={26} tick={{ fontSize: 9, fill: SLEEP }} />
+              <YAxis yAxisId="feeds" orientation="right" width={22} tick={{ fontSize: 9, fill: FEED }} allowDecimals={false} />
+              <Tooltip
+                formatter={(v, name) => (name === 'Sleep hours' ? [`${v} h`, name] : [`${v}`, name])}
+              />
+              <Line yAxisId="sleep" dataKey="sleepH" name="Sleep hours" stroke={SLEEP} strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+              <Line yAxisId="feeds" dataKey="feeds" name="Feeds" stroke={FEED} strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+            Left axis = sleep hours · right axis = feeds · rightmost = today (partial).
+          </p>
         </div>
       </section>
 
@@ -265,10 +265,10 @@ export default function DaysPage() {
           Option D · Activity heatmap
         </h2>
         <div className="rounded-xl border p-3 space-y-4">
-          <HeatGrid title="Sleeps / day" weeks={heat.weeks} max={heat.maxSleep} rgb={SLEEP_RGB} pick={(a) => a.sleeps} />
-          <HeatGrid title="Feeds / day" weeks={heat.weeks} max={heat.maxFeed} rgb={FEED_RGB} pick={(a) => a.feeds} />
+          <HeatGrid title="Sleeps / day" unit="sleeps" weeks={heat.weeks} max={heat.maxSleep} rgb={SLEEP_RGB} pick={(a) => a.sleeps} />
+          <HeatGrid title="Feeds / day" unit="feeds" weeks={heat.weeks} max={heat.maxFeed} rgb={FEED_RGB} pick={(a) => a.feeds} />
           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-            Each square = a day · darker = more · tap a square for the count.
+            Each square = a day · darker = more · tap a square to see the count above.
           </p>
         </div>
       </section>
@@ -280,21 +280,30 @@ const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
 function HeatGrid({
   title,
+  unit,
   weeks,
   max,
   rgb,
   pick,
 }: {
   title: string
+  unit: string
   weeks: ({ t: number; agg: DayAgg | null } | null)[][]
   max: number
   rgb: string
   pick: (a: DayAgg) => number
 }) {
+  const [picked, setPicked] = useState<{ t: number; count: number } | null>(null)
   const shade = (n: number) => (n === 0 ? 'rgba(120,120,120,0.12)' : `rgba(${rgb}, ${0.25 + 0.75 * (n / max)})`)
+  const readout = picked
+    ? `${new Date(picked.t).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })} · ${picked.count} ${unit}`
+    : 'tap a day'
   return (
     <div>
-      <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">{title}</div>
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-xs text-gray-600 dark:text-gray-300">{title}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{readout}</span>
+      </div>
       <div className="flex gap-[3px]">
         <div className="flex flex-col gap-[3px] mr-1">
           {WEEKDAYS.map((w, i) => (
@@ -306,15 +315,16 @@ function HeatGrid({
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-[3px]">
             {week.map((cell, di) => {
-              if (!cell) return <span key={di} className="w-3 h-3" />
-              const count = cell.agg ? pick(cell.agg) : null
-              const date = new Date(cell.t).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+              if (!cell || !cell.agg) return <span key={di} className="w-3 h-3" />
+              const count = pick(cell.agg)
+              const isSel = picked?.t === cell.t
               return (
-                <span
+                <button
                   key={di}
-                  title={count == null ? date : `${date}: ${count}`}
-                  className="w-3 h-3 rounded-sm"
-                  style={{ background: count == null ? 'transparent' : shade(count) }}
+                  type="button"
+                  onClick={() => setPicked({ t: cell.t, count })}
+                  className={`w-3 h-3 rounded-sm ${isSel ? 'ring-2 ring-gray-500 dark:ring-gray-300' : ''}`}
+                  style={{ background: shade(count) }}
                 />
               )
             })}
