@@ -77,7 +77,7 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
     const h = new Date(minTime)
     h.setHours(0, 0, 0, 0)
     for (; h.getTime() <= maxTime; h.setDate(h.getDate() + 1)) {
-      for (const [hr, label] of [[6, '6am'], [12, '12pm'], [18, '6pm']] as const) {
+      for (const [hr, label] of [[3, '3am'], [6, '6am'], [9, '9am'], [12, '12pm'], [15, '3pm'], [18, '6pm'], [21, '9pm']] as const) {
         const tm = new Date(h)
         tm.setHours(hr)
         const t = tm.getTime()
