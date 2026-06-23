@@ -21,6 +21,7 @@ const FEED = '#0d9488'
 const NAPPY = '#f59e0b'
 const SLEEP_RGB = '124, 58, 237'
 const FEED_RGB = '13, 148, 136'
+const NAPPY_RGB = '245, 158, 11'
 const TRACK = 'rgba(120, 120, 120, 0.15)'
 
 // Scatter marker: filled dot, except today (partial) which is a hollow ring.
@@ -74,7 +75,7 @@ export default function DaysPage() {
 
   // GitHub-style grid: weekday rows (Sun→Sat) × week columns, oldest week left.
   const heat = useMemo(() => {
-    if (!days.length) return { weeks: [] as ({ t: number; agg: DayAgg | null } | null)[][], maxSleep: 1, maxFeed: 1 }
+    if (!days.length) return { weeks: [] as ({ t: number; agg: DayAgg | null } | null)[][], maxSleep: 1, maxFeed: 1, maxChange: 1 }
     const aggByDay = new Map(days.map((d) => [d.dayStart, d.agg]))
     const todayStart = days[0].dayStart
     const start = new Date(days[days.length - 1].dayStart)
@@ -82,6 +83,7 @@ export default function DaysPage() {
     start.setDate(start.getDate() - start.getDay()) // back to Sunday
     let maxSleep = 1
     let maxFeed = 1
+    let maxChange = 1
     const weeks: ({ t: number; agg: DayAgg | null } | null)[][] = []
     const c = new Date(start)
     while (c.getTime() <= todayStart) {
@@ -93,13 +95,14 @@ export default function DaysPage() {
         if (agg) {
           maxSleep = Math.max(maxSleep, agg.sleeps)
           maxFeed = Math.max(maxFeed, agg.feeds)
+          maxChange = Math.max(maxChange, agg.changes)
         }
         week.push(t.getTime() > todayStart ? null : { t: t.getTime(), agg })
         c.setDate(c.getDate() + 1)
       }
       weeks.push(week)
     }
-    return { weeks, maxSleep, maxFeed }
+    return { weeks, maxSleep, maxFeed, maxChange }
   }, [days])
 
   if (!days.length) return <main className="p-4">Loading…</main>
@@ -287,6 +290,7 @@ export default function DaysPage() {
         <div className="rounded-xl border p-3 space-y-4">
           <HeatGrid title="Sleeps / day" unit="sleeps" weeks={heat.weeks} max={heat.maxSleep} rgb={SLEEP_RGB} pick={(a) => a.sleeps} />
           <HeatGrid title="Feeds / day" unit="feeds" weeks={heat.weeks} max={heat.maxFeed} rgb={FEED_RGB} pick={(a) => a.feeds} />
+          <HeatGrid title="Nappies/potties / day" unit="changes" weeks={heat.weeks} max={heat.maxChange} rgb={NAPPY_RGB} pick={(a) => a.changes} />
           <p className="text-[11px] text-gray-400 dark:text-gray-500">
             Each square = a day · darker = more · tap a square to see the count above.
           </p>
