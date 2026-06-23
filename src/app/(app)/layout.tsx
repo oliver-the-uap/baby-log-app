@@ -14,8 +14,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <RegisterSW />
       <OfflineSync />
       <ToastProvider>{children}</ToastProvider>
-      <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 grid grid-cols-5 text-center text-sm">
+      <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 grid grid-cols-6 text-center text-xs">
         <Link className="py-3" href="/">Log</Link>
+        <Link className="py-3" href="/days">Days</Link>
         <Link className="py-3" href="/growth">Growth</Link>
         <Link className="py-3" href="/notes">Notes</Link>
         <Link className="py-3" href="/signs">Signs</Link>
