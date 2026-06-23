@@ -4,8 +4,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
+  ScatterChart,
+  Scatter,
   XAxis,
   YAxis,
   Tooltip,
@@ -18,9 +18,22 @@ import type { BabyEvent } from '@/lib/domain/types'
 
 const SLEEP = '#7c3aed'
 const FEED = '#0d9488'
+const NAPPY = '#f59e0b'
 const SLEEP_RGB = '124, 58, 237'
 const FEED_RGB = '13, 148, 136'
 const TRACK = 'rgba(120, 120, 120, 0.15)'
+
+// Scatter marker: filled dot, except today (partial) which is a hollow ring.
+// Points with no value (e.g. 0-sleep days passed as null) have null cx/cy — skip them.
+const dot = (color: string) => (props: { cx?: number; cy?: number; index?: number; payload?: { today?: boolean } }) => {
+  const { cx, cy, index, payload } = props
+  if (cx == null || cy == null) return <g key={index} />
+  return payload?.today ? (
+    <circle key={index} cx={cx} cy={cy} r={5} fill="none" stroke={color} strokeWidth={2.5} />
+  ) : (
+    <circle key={index} cx={cx} cy={cy} r={3.5} fill={color} />
+  )
+}
 
 const hm = (mins: number) => {
   const h = Math.floor(mins / 60)
@@ -105,8 +118,10 @@ export default function DaysPage() {
     .reverse()
     .map((d) => ({
       label: new Date(d.dayStart).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric' }),
-      sleepH: +(d.agg.sleepMin / 60).toFixed(1),
+      sleepH: d.agg.sleepMin > 0 ? +(d.agg.sleepMin / 60).toFixed(1) : null,
       feeds: d.agg.feeds,
+      changes: d.agg.changes,
+      today: d.back === 0,
     }))
 
   return (
@@ -227,34 +242,39 @@ export default function DaysPage() {
         </div>
       </section>
 
-      {/* OPTION C — two-week trend line, dual y-axis */}
+      {/* OPTION C — two-week scatter, dual y-axis */}
       <section>
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
           Option C · Two-week trends
         </h2>
         <div className="rounded-xl border p-3 space-y-2">
-          <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-300">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-300">
             <span className="flex items-center gap-1">
-              <span className="inline-block w-3 h-[3px] rounded" style={{ background: SLEEP }} /> Sleep hours
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: SLEEP }} /> Sleep hours
             </span>
             <span className="flex items-center gap-1">
-              <span className="inline-block w-3 h-[3px] rounded" style={{ background: FEED }} /> Feeds
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: FEED }} /> Feeds
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: NAPPY }} /> Nappies/potties
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={trend} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
-              <XAxis dataKey="label" tick={{ fontSize: 9 }} interval={0} />
-              <YAxis yAxisId="sleep" width={26} tick={{ fontSize: 9, fill: SLEEP }} />
-              <YAxis yAxisId="feeds" orientation="right" width={22} tick={{ fontSize: 9, fill: FEED }} allowDecimals={false} />
+          <ResponsiveContainer width="100%" height={210}>
+            <ScatterChart data={trend} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
+              <XAxis dataKey="label" type="category" tick={{ fontSize: 9 }} interval={0} />
+              <YAxis yAxisId="sleep" type="number" width={26} tick={{ fontSize: 9, fill: SLEEP }} />
+              <YAxis yAxisId="count" type="number" orientation="right" width={22} tick={{ fontSize: 9 }} allowDecimals={false} />
               <Tooltip
+                cursor={{ strokeDasharray: '3 3' }}
                 formatter={(v, name) => (name === 'Sleep hours' ? [`${v} h`, name] : [`${v}`, name])}
               />
-              <Line yAxisId="sleep" dataKey="sleepH" name="Sleep hours" stroke={SLEEP} strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
-              <Line yAxisId="feeds" dataKey="feeds" name="Feeds" stroke={FEED} strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
-            </LineChart>
+              <Scatter yAxisId="sleep" dataKey="sleepH" name="Sleep hours" shape={dot(SLEEP)} isAnimationActive={false} />
+              <Scatter yAxisId="count" dataKey="feeds" name="Feeds" shape={dot(FEED)} isAnimationActive={false} />
+              <Scatter yAxisId="count" dataKey="changes" name="Nappies/potties" shape={dot(NAPPY)} isAnimationActive={false} />
+            </ScatterChart>
           </ResponsiveContainer>
           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-            Left axis = sleep hours · right axis = feeds · rightmost = today (partial).
+            Left axis = sleep hours · right axis = counts · hollow marker = today (partial) · 0-sleep days omitted.
           </p>
         </div>
       </section>
