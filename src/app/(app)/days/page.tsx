@@ -130,13 +130,20 @@ export default function DaysPage() {
   const trend = days
     .slice(0, 14)
     .reverse()
-    .map((d) => ({
-      label: new Date(d.dayStart).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric' }),
-      sleepH: d.agg.sleepMin > 0 ? +(d.agg.sleepMin / 60).toFixed(1) : null,
-      feeds: d.agg.feeds,
-      changes: d.agg.changes,
-      today: d.back === 0,
-    }))
+    .map((d, i) => {
+      const dt = new Date(d.dayStart)
+      const dayNum = dt.getDate()
+      return {
+        // Compact axis tick: just the day number, with a "23 Jun" only on the
+        // first tick and when the month rolls over. No year.
+        label: i === 0 || dayNum === 1 ? dt.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : String(dayNum),
+        full: dt.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }),
+        sleepH: d.agg.sleepMin > 0 ? +(d.agg.sleepMin / 60).toFixed(1) : null,
+        feeds: d.agg.feeds,
+        changes: d.agg.changes,
+        today: d.back === 0,
+      }
+    })
   // Trend lines (background): exclude today's partial day; sleep waits for enough days.
   const sleepSeries = trend.map((d) => (d.today ? null : d.sleepH))
   const sleepDefined = sleepSeries.filter((v) => v != null).length
@@ -287,11 +294,12 @@ export default function DaysPage() {
           </div>
           <ResponsiveContainer width="100%" height={210}>
             <ScatterChart data={trendData} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
-              <XAxis dataKey="label" type="category" tick={{ fontSize: 9 }} interval={0} />
+              <XAxis dataKey="label" type="category" tick={{ fontSize: 10 }} interval={0} tickMargin={4} />
               <YAxis yAxisId="sleep" type="number" width={26} tick={{ fontSize: 9, fill: SLEEP }} />
               <YAxis yAxisId="count" type="number" orientation="right" width={22} tick={{ fontSize: 9 }} allowDecimals={false} />
               <Tooltip
                 cursor={{ strokeDasharray: '3 3' }}
+                labelFormatter={(label, payload) => payload?.[0]?.payload?.full ?? label}
                 formatter={(v, name) => (name === 'Sleep hours' ? [`${v} h`, name] : [`${v}`, name])}
               />
               {/* background trend lines (behind the points) */}
