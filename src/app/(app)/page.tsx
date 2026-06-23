@@ -7,6 +7,7 @@ import { activeSleep } from '@/lib/domain/sleep'
 import { notifyError } from '@/lib/notify'
 import { useToast } from '@/components/ToastProvider'
 import { QuickAdd } from '@/components/QuickAdd'
+import { MilestoneCard } from '@/components/MilestoneCard'
 import { TodayStats } from '@/components/TodayStats'
 import { SinceLast } from '@/components/SinceLast'
 import { Timeline } from '@/components/Timeline'
@@ -103,6 +104,8 @@ export default function HomePage() {
       <QuickAdd events={events} onChange={refresh} />
 
       <SinceLast events={events} lastWash={lastBath} />
+
+      <MilestoneCard dob={dob} />
 
       <TodayStats events={events} />
 

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   PieChart,
   Pie,
@@ -14,6 +14,7 @@ import {
 import { allEventsForChart } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import { aggregateDay, localMidnight, type DayAgg } from '@/lib/domain/dayStats'
+import { movingAverage } from '@/lib/domain/trend'
 import type { BabyEvent } from '@/lib/domain/types'
 
 const SLEEP = '#7c3aed'
@@ -36,6 +37,10 @@ const dot = (color: string) => (props: { cx?: number; cy?: number; index?: numbe
   )
 }
 
+// Invisible point — used by the background trend Scatters, which draw only a line.
+const noDot = (props: { index?: number }) => <g key={props.index} />
+const SLEEP_TREND_MIN = 5 // need at least this many days with sleep before a trend means anything
+
 const hm = (mins: number) => {
   const h = Math.floor(mins / 60)
   const m = Math.round(mins % 60)
@@ -55,6 +60,7 @@ export default function DaysPage() {
   const [events, setEvents] = useState<BabyEvent[]>([])
   const [now] = useState(() => Date.now())
   const [sel, setSel] = useState(0) // days back, for Option A
+  const donutRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     allEventsForChart().then(setEvents).catch(notifyError)
@@ -105,6 +111,11 @@ export default function DaysPage() {
     return { weeks, maxSleep, maxFeed, maxChange }
   }, [days])
 
+  // Option B loads scrolled to the right edge (today), so the latest day shows first.
+  useEffect(() => {
+    if (donutRef.current) donutRef.current.scrollLeft = donutRef.current.scrollWidth
+  }, [days])
+
   if (!days.length) return <main className="p-4">Loading…</main>
 
   const cur = days[Math.min(sel, days.length - 1)]
@@ -115,7 +126,7 @@ export default function DaysPage() {
     month: 'short',
   })
 
-  const donutDays = days.slice(0, 10).reverse()
+  const donutDays = [...days].reverse() // oldest → today (auto-scrolled to the right edge)
   const trend = days
     .slice(0, 14)
     .reverse()
@@ -126,6 +137,18 @@ export default function DaysPage() {
       changes: d.agg.changes,
       today: d.back === 0,
     }))
+  // Trend lines (background): exclude today's partial day; sleep waits for enough days.
+  const sleepSeries = trend.map((d) => (d.today ? null : d.sleepH))
+  const sleepDefined = sleepSeries.filter((v) => v != null).length
+  const sleepTrend = sleepDefined >= SLEEP_TREND_MIN ? movingAverage(sleepSeries) : trend.map(() => null)
+  const feedsTrend = movingAverage(trend.map((d) => (d.today ? null : d.feeds)))
+  const changesTrend = movingAverage(trend.map((d) => (d.today ? null : d.changes)))
+  const trendData = trend.map((d, i) => ({
+    ...d,
+    sleepTrend: sleepTrend[i],
+    feedsTrend: feedsTrend[i],
+    changesTrend: changesTrend[i],
+  }))
 
   return (
     <main className="p-4 space-y-8">
@@ -190,7 +213,7 @@ export default function DaysPage() {
               <span className="inline-block w-3 h-3 rounded-full" style={{ background: FEED }} /> Feeds (inner)
             </span>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-1">
+          <div ref={donutRef} className="flex gap-3 overflow-x-auto pb-1">
             {donutDays.map((d) => (
               <div key={d.back} className="shrink-0 w-[72px] text-center">
                 <div className="relative" style={{ height: 72 }}>
@@ -263,7 +286,7 @@ export default function DaysPage() {
             </span>
           </div>
           <ResponsiveContainer width="100%" height={210}>
-            <ScatterChart data={trend} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
+            <ScatterChart data={trendData} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
               <XAxis dataKey="label" type="category" tick={{ fontSize: 9 }} interval={0} />
               <YAxis yAxisId="sleep" type="number" width={26} tick={{ fontSize: 9, fill: SLEEP }} />
               <YAxis yAxisId="count" type="number" orientation="right" width={22} tick={{ fontSize: 9 }} allowDecimals={false} />
@@ -271,13 +294,18 @@ export default function DaysPage() {
                 cursor={{ strokeDasharray: '3 3' }}
                 formatter={(v, name) => (name === 'Sleep hours' ? [`${v} h`, name] : [`${v}`, name])}
               />
+              {/* background trend lines (behind the points) */}
+              <Scatter yAxisId="sleep" dataKey="sleepTrend" shape={noDot} line={{ stroke: SLEEP, strokeWidth: 1.5, strokeOpacity: 0.4 }} tooltipType="none" isAnimationActive={false} />
+              <Scatter yAxisId="count" dataKey="feedsTrend" shape={noDot} line={{ stroke: FEED, strokeWidth: 1.5, strokeOpacity: 0.4 }} tooltipType="none" isAnimationActive={false} />
+              <Scatter yAxisId="count" dataKey="changesTrend" shape={noDot} line={{ stroke: NAPPY, strokeWidth: 1.5, strokeOpacity: 0.4 }} tooltipType="none" isAnimationActive={false} />
+              {/* points */}
               <Scatter yAxisId="sleep" dataKey="sleepH" name="Sleep hours" shape={dot(SLEEP)} isAnimationActive={false} />
               <Scatter yAxisId="count" dataKey="feeds" name="Feeds" shape={dot(FEED)} isAnimationActive={false} />
               <Scatter yAxisId="count" dataKey="changes" name="Nappies/potties" shape={dot(NAPPY)} isAnimationActive={false} />
             </ScatterChart>
           </ResponsiveContainer>
           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-            Left axis = sleep hours · right axis = counts · hollow marker = today (partial) · 0-sleep days omitted.
+            Left axis = sleep hours · right axis = counts · faint line = trend · hollow marker = today (partial) · 0-sleep days omitted.
           </p>
         </div>
       </section>
