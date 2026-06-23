@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { createEvent, updateEvent, deleteEvent } from '@/lib/data/events'
 import { notifyError } from '@/lib/notify'
 import { activeSleep } from '@/lib/domain/sleep'
+import { lastBreastSide } from '@/lib/domain/feed'
 import { useToast } from './ToastProvider'
 import { EliminationDialog } from './EliminationDialog'
 import { WashDialog } from './WashDialog'
@@ -18,6 +19,7 @@ function sameDay(iso: string, now: Date): boolean {
 export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: () => void }) {
   const [open, setOpen] = useState<null | 'elim' | 'wash' | 'feed' | 'stat'>(null)
   const sleeping = activeSleep(events)
+  const lastSide = lastBreastSide(events)
   const showToast = useToast()
 
   async function toggleSleep() {
@@ -78,8 +80,13 @@ export function QuickAdd({ events, onChange }: { events: BabyEvent[]; onChange: 
         <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('wash')}>
           Wash
         </button>
-        <button className="rounded-xl border p-5 text-lg" onClick={() => setOpen('feed')}>
+        <button className="rounded-xl border p-4 text-lg leading-tight" onClick={() => setOpen('feed')}>
           Feed
+          {lastSide && (
+            <span className="block text-xs font-normal text-gray-500 dark:text-gray-400 mt-1 capitalize">
+              last: {lastSide.side}
+            </span>
+          )}
         </button>
         <button
           className={`rounded-xl border p-5 text-lg ${

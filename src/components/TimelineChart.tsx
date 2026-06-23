@@ -46,7 +46,7 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
 
   const pxPerMin = ZOOMS[zoom] / 60
 
-  const { width, blocks, dayTicks } = useMemo(() => {
+  const { width, blocks, dayTicks, hourTicks } = useMemo(() => {
     const laneTypes = LANES.flatMap((l) => l.types)
     const evs = events.filter((e) => laneTypes.includes(e.type))
     const minTime = evs.length ? new Date(evs[0].occurred_at).getTime() : nowTs - 24 * 3600e3
@@ -73,7 +73,18 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
     for (; d.getTime() <= maxTime; d.setDate(d.getDate() + 1)) {
       dayTicks.push({ x: xOf(d.getTime()), label: d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) })
     }
-    return { width, blocks, dayTicks }
+    const hourTicks: { x: number; label: string }[] = []
+    const h = new Date(minTime)
+    h.setHours(0, 0, 0, 0)
+    for (; h.getTime() <= maxTime; h.setDate(h.getDate() + 1)) {
+      for (const [hr, label] of [[6, '6am'], [12, '12pm'], [18, '6pm']] as const) {
+        const tm = new Date(h)
+        tm.setHours(hr)
+        const t = tm.getTime()
+        if (t >= minTime && t <= maxTime) hourTicks.push({ x: xOf(t), label })
+      }
+    }
+    return { width, blocks, dayTicks, hourTicks }
   }, [events, pxPerMin, nowTs])
 
   // start scrolled to "now" (far right) whenever width changes
@@ -121,6 +132,14 @@ export function TimelineChart({ refreshKey, onChange }: { refreshKey: number; on
                 className={i % 2 ? 'bg-gray-50 dark:bg-neutral-800/40' : 'bg-white dark:bg-neutral-900'}
                 style={{ position: 'absolute', top: AXIS_H + i * LANE_H, left: 0, width, height: LANE_H, borderTop: '1px solid rgba(120,120,120,0.22)' }}
               />
+            ))}
+            {hourTicks.map((t, i) => (
+              <div key={`h${i}`}>
+                <div style={{ position: 'absolute', left: t.x, top: 0, height: chartH, borderLeft: '1px solid rgba(120,120,120,0.12)' }} />
+                <div style={{ position: 'absolute', left: t.x + 3, top: 21, fontSize: 9 }} className="text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                  {t.label}
+                </div>
+              </div>
             ))}
             {dayTicks.map((t, i) => (
               <div key={i}>
