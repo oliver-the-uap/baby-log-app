@@ -6,6 +6,7 @@ export interface DayAgg {
   awakeRestMin: number // time awake and not feeding (elapsed − sleep − feed)
   elapsedMin: number
   feeds: number
+  sleeps: number // sleep events that started in the day
   changes: number // nappies + potties
   washes: number
   vitd: boolean
@@ -20,6 +21,7 @@ export function aggregateDay(events: BabyEvent[], dayStart: number, dayEnd: numb
   let sleepMs = 0
   let feedMs = 0
   let feeds = 0
+  let sleeps = 0
   let changes = 0
   let washes = 0
   let vitd = false
@@ -29,6 +31,7 @@ export function aggregateDay(events: BabyEvent[], dayStart: number, dayEnd: numb
     if (ev.type === 'sleep') {
       const e2 = ev.sleep_ended_at ? new Date(ev.sleep_ended_at).getTime() : nowMs
       sleepMs += overlap(s, e2, dayStart, end)
+      if (inDay) sleeps++
     } else if (ev.type === 'feed') {
       const e2 = ev.feed_ended_at ? new Date(ev.feed_ended_at).getTime() : nowMs
       feedMs += overlap(s, e2, dayStart, end)
@@ -49,6 +52,7 @@ export function aggregateDay(events: BabyEvent[], dayStart: number, dayEnd: numb
     awakeRestMin: Math.max(0, elapsedMin - sleepMin - feedMin),
     elapsedMin,
     feeds,
+    sleeps,
     changes,
     washes,
     vitd,

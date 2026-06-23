@@ -18,37 +18,24 @@ import type { BabyEvent } from '@/lib/domain/types'
 
 const SLEEP = '#7c3aed'
 const FEED = '#0d9488'
-const AWAKE = '#cbd5e1'
+const SLEEP_RGB = '124, 58, 237'
+const FEED_RGB = '13, 148, 136'
+const TRACK = 'rgba(120, 120, 120, 0.15)'
 
 const hm = (mins: number) => {
   const h = Math.floor(mins / 60)
   const m = Math.round(mins % 60)
   return `${h > 0 ? `${h}h ` : ''}${m}m`
 }
-const splitData = (a: DayAgg) => [
-  { name: 'Sleep', value: a.sleepMin, fill: SLEEP },
-  { name: 'Feeding', value: a.feedMin, fill: FEED },
-  { name: 'Awake', value: a.awakeRestMin, fill: AWAKE },
+
+// Two independent rings: sleep and feed are each a share of the day's elapsed
+// time, drawn separately because they can overlap (she can feed while asleep).
+const ring = (filled: number, elapsed: number, fill: string) => [
+  { v: Math.max(0, filled), fill },
+  { v: Math.max(0, elapsed - filled), fill: TRACK },
 ]
 
 type Day = { back: number; dayStart: number; agg: DayAgg }
-
-function Legend() {
-  return (
-    <div className="flex gap-3 text-xs text-gray-600 dark:text-gray-300">
-      {[
-        ['Sleep', SLEEP],
-        ['Feeding', FEED],
-        ['Awake', AWAKE],
-      ].map(([label, c]) => (
-        <span key={label} className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-sm" style={{ background: c as string }} />
-          {label}
-        </span>
-      ))}
-    </div>
-  )
-}
 
 export default function DaysPage() {
   const [events, setEvents] = useState<BabyEvent[]>([])
@@ -71,6 +58,36 @@ export default function DaysPage() {
     }
     return { days, maxBack }
   }, [events, now])
+
+  // GitHub-style grid: weekday rows (Sun→Sat) × week columns, oldest week left.
+  const heat = useMemo(() => {
+    if (!days.length) return { weeks: [] as ({ t: number; agg: DayAgg | null } | null)[][], maxSleep: 1, maxFeed: 1 }
+    const aggByDay = new Map(days.map((d) => [d.dayStart, d.agg]))
+    const todayStart = days[0].dayStart
+    const start = new Date(days[days.length - 1].dayStart)
+    start.setHours(0, 0, 0, 0)
+    start.setDate(start.getDate() - start.getDay()) // back to Sunday
+    let maxSleep = 1
+    let maxFeed = 1
+    const weeks: ({ t: number; agg: DayAgg | null } | null)[][] = []
+    const c = new Date(start)
+    while (c.getTime() <= todayStart) {
+      const week: ({ t: number; agg: DayAgg | null } | null)[] = []
+      for (let wd = 0; wd < 7; wd++) {
+        const t = new Date(c)
+        t.setHours(0, 0, 0, 0)
+        const agg = aggByDay.get(t.getTime()) ?? null
+        if (agg) {
+          maxSleep = Math.max(maxSleep, agg.sleeps)
+          maxFeed = Math.max(maxFeed, agg.feeds)
+        }
+        week.push(t.getTime() > todayStart ? null : { t: t.getTime(), agg })
+        c.setDate(c.getDate() + 1)
+      }
+      weeks.push(week)
+    }
+    return { weeks, maxSleep, maxFeed }
+  }, [days])
 
   if (!days.length) return <main className="p-4">Loading…</main>
 
@@ -97,7 +114,7 @@ export default function DaysPage() {
       <div>
         <h1 className="text-xl font-semibold">Days</h1>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Three ways to compare days — tell me which you like and I&apos;ll keep that one.
+          A few ways to compare days — tell me which you like and I&apos;ll keep that one.
         </p>
       </div>
 
@@ -141,42 +158,72 @@ export default function DaysPage() {
         </div>
       </section>
 
-      {/* OPTION B — daily time-split donuts */}
+      {/* OPTION B — twin-ring donuts (sleep + feed), counts in the middle */}
       <section>
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-          Option B · Time-split donuts
+          Option B · Sleep & feed rings
         </h2>
         <div className="rounded-xl border p-3 space-y-2">
-          <Legend />
+          <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-300">
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full" style={{ background: SLEEP }} /> Sleep (outer)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full" style={{ background: FEED }} /> Feeds (inner)
+            </span>
+          </div>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {donutDays.map((d) => (
-              <div key={d.back} className="shrink-0 w-[68px] text-center">
-                <ResponsiveContainer width="100%" height={68}>
-                  <PieChart>
-                    <Pie
-                      data={splitData(d.agg)}
-                      dataKey="value"
-                      innerRadius={18}
-                      outerRadius={32}
-                      stroke="none"
-                      isAnimationActive={false}
-                    >
-                      {splitData(d.agg).map((s) => (
-                        <Cell key={s.name} fill={s.fill} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div key={d.back} className="shrink-0 w-[72px] text-center">
+                <div className="relative" style={{ height: 72 }}>
+                  <ResponsiveContainer width="100%" height={72}>
+                    <PieChart>
+                      <Pie
+                        data={ring(d.agg.sleepMin, d.agg.elapsedMin, SLEEP)}
+                        dataKey="v"
+                        innerRadius={25}
+                        outerRadius={33}
+                        startAngle={90}
+                        endAngle={-270}
+                        stroke="none"
+                        isAnimationActive={false}
+                      >
+                        {ring(d.agg.sleepMin, d.agg.elapsedMin, SLEEP).map((s, i) => (
+                          <Cell key={i} fill={s.fill} />
+                        ))}
+                      </Pie>
+                      <Pie
+                        data={ring(d.agg.feedMin, d.agg.elapsedMin, FEED)}
+                        dataKey="v"
+                        innerRadius={14}
+                        outerRadius={22}
+                        startAngle={90}
+                        endAngle={-270}
+                        stroke="none"
+                        isAnimationActive={false}
+                      >
+                        {ring(d.agg.feedMin, d.agg.elapsedMin, FEED).map((s, i) => (
+                          <Cell key={i} fill={s.fill} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center leading-none pointer-events-none">
+                    <span className="text-[11px] font-bold" style={{ color: SLEEP }}>{d.agg.sleeps}</span>
+                    <span className="text-[11px] font-bold" style={{ color: FEED }}>{d.agg.feeds}</span>
+                  </div>
+                </div>
                 <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
                   {d.back === 0
                     ? 'Today'
                     : new Date(d.dayStart).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                 </div>
-                <div className="text-[10px] font-medium leading-tight">{hm(d.agg.sleepMin)} slp</div>
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-gray-400 dark:text-gray-500">Scroll for earlier days · today is partial.</p>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+            Ring fill = share of the day · centre numbers = sleep / feed counts · scroll for earlier · today is partial.
+          </p>
         </div>
       </section>
 
@@ -211,7 +258,70 @@ export default function DaysPage() {
           <p className="text-[11px] text-gray-400 dark:text-gray-500">Left = earlier · rightmost = today (partial).</p>
         </div>
       </section>
+
+      {/* OPTION D — GitHub-style activity heatmaps */}
+      <section>
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
+          Option D · Activity heatmap
+        </h2>
+        <div className="rounded-xl border p-3 space-y-4">
+          <HeatGrid title="Sleeps / day" weeks={heat.weeks} max={heat.maxSleep} rgb={SLEEP_RGB} pick={(a) => a.sleeps} />
+          <HeatGrid title="Feeds / day" weeks={heat.weeks} max={heat.maxFeed} rgb={FEED_RGB} pick={(a) => a.feeds} />
+          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+            Each square = a day · darker = more · tap a square for the count.
+          </p>
+        </div>
+      </section>
     </main>
+  )
+}
+
+const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+function HeatGrid({
+  title,
+  weeks,
+  max,
+  rgb,
+  pick,
+}: {
+  title: string
+  weeks: ({ t: number; agg: DayAgg | null } | null)[][]
+  max: number
+  rgb: string
+  pick: (a: DayAgg) => number
+}) {
+  const shade = (n: number) => (n === 0 ? 'rgba(120,120,120,0.12)' : `rgba(${rgb}, ${0.25 + 0.75 * (n / max)})`)
+  return (
+    <div>
+      <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">{title}</div>
+      <div className="flex gap-[3px]">
+        <div className="flex flex-col gap-[3px] mr-1">
+          {WEEKDAYS.map((w, i) => (
+            <span key={i} className="text-[8px] leading-3 h-3 text-gray-400 dark:text-gray-500">
+              {i % 2 ? w : ''}
+            </span>
+          ))}
+        </div>
+        {weeks.map((week, wi) => (
+          <div key={wi} className="flex flex-col gap-[3px]">
+            {week.map((cell, di) => {
+              if (!cell) return <span key={di} className="w-3 h-3" />
+              const count = cell.agg ? pick(cell.agg) : null
+              const date = new Date(cell.t).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+              return (
+                <span
+                  key={di}
+                  title={count == null ? date : `${date}: ${count}`}
+                  className="w-3 h-3 rounded-sm"
+                  style={{ background: count == null ? 'transparent' : shade(count) }}
+                />
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

@@ -24,6 +24,7 @@ describe('aggregateDay', () => {
     expect(agg.sleepMin).toBe(90)
     expect(agg.feedMin).toBe(20)
     expect(agg.feeds).toBe(1)
+    expect(agg.sleeps).toBe(1)
   })
 
   it('clips an interval that straddles midnight to the day window', () => {
